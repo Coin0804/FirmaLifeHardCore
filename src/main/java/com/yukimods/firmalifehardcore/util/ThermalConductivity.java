@@ -9,10 +9,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DoorBlock;
-import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+
 
 /**
  * 热传导率工具类 — 3 级热阻系统，通过 block tag 查询。
@@ -56,36 +55,19 @@ public final class ThermalConductivity {
         return state.is(TAG_DOOR);
     }
 
-    /** 检查门/活板门是否处于开启状态 */
+    /** 检查门/活板门是否处于开启状态（Door/TrapDoor/Firmalife 门统一用 OPEN 属性） */
     public static boolean isOpenDoor(BlockState state) {
-        if (state.getBlock() instanceof DoorBlock) {
-            return state.getValue(DoorBlock.OPEN);
-        }
-        if (state.getBlock() instanceof TrapDoorBlock) {
-            return state.getValue(TrapDoorBlock.OPEN);
-        }
-        if (state.hasProperty(BlockStateProperties.OPEN)) {
-            return state.getValue(BlockStateProperties.OPEN);
-        }
-        return false;
+        return state.hasProperty(BlockStateProperties.OPEN) && state.getValue(BlockStateProperties.OPEN);
     }
 
-    /** 双门检测：门所在方向的下一格是否也有一扇关闭的门 */
-    public static boolean hasDoubleDoor(Level level, BlockPos doorPos, BlockState doorState, Direction facing) {
-        // 检查面对方向上的下一个方块
-        BlockPos nextPos = doorPos.relative(facing);
-        BlockState nextState = level.getBlockState(nextPos);
-        if (!isDoor(nextState)) return false;
-
-        // 对门方块，检查是否同一方向且都关闭
-        if (doorState.getBlock() instanceof DoorBlock && nextState.getBlock() instanceof DoorBlock) {
-            // 双门 = 两个门方块都关闭 + 方向一致
-            return !isOpenDoor(doorState) && !isOpenDoor(nextState)
-                && doorState.getValue(DoorBlock.FACING) == nextState.getValue(DoorBlock.FACING);
-        }
-        // 活板门：同一方向的连续两个
-        if (doorState.getBlock() instanceof TrapDoorBlock && nextState.getBlock() instanceof TrapDoorBlock) {
-            return !isOpenDoor(doorState) && !isOpenDoor(nextState);
+    /** 双门检测：面对方向及其反方向相邻位置是否有关闭的门 */
+    public static boolean hasDoubleDoor(Level level, BlockPos doorPos, BlockState doorState) {
+        Direction facing = getDoorFacing(doorState);
+        for (Direction dir : new Direction[]{facing, facing.getOpposite()}) {
+            BlockPos nextPos = doorPos.relative(dir);
+            BlockState nextState = level.getBlockState(nextPos);
+            if (isDoor(nextState))
+                return true;
         }
         return false;
     }
@@ -93,5 +75,13 @@ public final class ThermalConductivity {
     /** 检查方块是否在容器 tag 中 */
     public static boolean isContainer(BlockState state) {
         return state.is(TAG_CONTAINER);
+    }
+
+    private static Direction getDoorFacing(BlockState state) {
+        if (state.hasProperty(BlockStateProperties.HORIZONTAL_FACING))
+            return state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+        if (state.hasProperty(BlockStateProperties.FACING))
+            return state.getValue(BlockStateProperties.FACING);
+        return null;
     }
 }

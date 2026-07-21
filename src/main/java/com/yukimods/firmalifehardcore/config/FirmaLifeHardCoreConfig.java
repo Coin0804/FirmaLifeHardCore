@@ -49,8 +49,8 @@ public class FirmaLifeHardCoreConfig {
             builder.comment("FirmaLife HardCore — 地窖热阻系统配置").push("server");
 
             scanRadius = builder
-                .comment("地窖扫描半径（从变更位置向各方向）")
-                .defineInRange("scanRadius", 3, 1, 10);
+                .comment("地窖扫描半径（种子位置向各方向的最大搜索距离，对标 Firmalife 原版 inflatedBy(15)）")
+                .defineInRange("scanRadius", 15, 3, 32);
             minThermalResistance = builder
                 .comment("最小平均热阻值，低于此值地窖无效")
                 .defineInRange("minThermalResistance", 0.2, 0.0, 1.0);

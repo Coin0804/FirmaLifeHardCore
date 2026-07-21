@@ -7,7 +7,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
@@ -19,9 +18,12 @@ public class CellarAttachment {
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
         DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, FirmaLifeHardCore.MOD_ID);
 
+    /** 自动创建 CellarTracker 的 default factory */
+    private static final Supplier<CellarTracker> FACTORY = CellarTracker::new;
+
     public static final Supplier<AttachmentType<CellarTracker>> CELLAR_TRACKER =
         ATTACHMENT_TYPES.register("cellar_tracker",
-            () -> AttachmentType.builder(() -> (CellarTracker) null).serializeNull().build()
+            () -> AttachmentType.builder(FACTORY).build()
         );
 
     public static void register(IEventBus modEventBus) {
@@ -29,14 +31,9 @@ public class CellarAttachment {
     }
 
     /**
-     * 从 ServerLevel 获取 CellarTracker。
-     * 如果尚不存在则自动创建并附着。
+     * 从 ServerLevel 获取 CellarTracker（自动创建，永不返回 null）。
      */
-    @Nullable
     public static CellarTracker get(ServerLevel level) {
-        if (!level.hasData(CELLAR_TRACKER.get())) {
-            level.setData(CELLAR_TRACKER.get(), new CellarTracker());
-        }
         return level.getData(CELLAR_TRACKER.get());
     }
 }

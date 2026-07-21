@@ -32,14 +32,14 @@ public class CellarDebugInfo {
     public String format() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n═══════════════════════════════════════════════════════\n");
-        sb.append("  📦 FirmaLifeHardCore — 地窖检测报告\n");
+        sb.append("  [Cellar] FirmaLifeHardCore — 地窖检测报告\n");
         sb.append("═══════════════════════════════════════════════════════\n");
         sb.append("  位置: ").append(pos.toShortString()).append("\n");
 
         if (space != null && space.valid) {
-            sb.append("  地窖状态: ✅ 有效 (CellarTracker 已缓存)\n\n");
+            sb.append("  地窖状态: [OK] 有效 (CellarTracker 已缓存)\n\n");
 
-            sb.append("  🧱 墙体数据:\n");
+            sb.append("  [Wall] 墙体数据:\n");
             sb.append("     平均热阻: ").append(DF.format(space.avgResistance)).append(" / 1.00\n");
             sb.append("     墙体方块: ").append(space.totalWallBlocks()).append(" 个\n");
             if (space.totalWallBlocks() > 0) {
@@ -52,12 +52,16 @@ public class CellarDebugInfo {
                 sb.append("     未匹配:             ").append(space.unmatchedCount).append(" 块\n");
             }
 
-            sb.append("\n  🌡️  温度:\n");
+            sb.append("\n  [Temp] 温度:\n");
             sb.append("     室外温度 (TFC):  ").append(DF1.format(outdoorTemp)).append("°C\n");
             sb.append("     地窖有效温度:    ").append(DF1.format(space.effectiveTemperature)).append("°C")
                 .append("  (保温 ").append(Math.round(space.avgResistance * 100)).append("%)\n");
 
-            sb.append("\n  🍖 保鲜等级: ");
+            sb.append("\n  [Door] 门:\n");
+            sb.append("     普通门: ").append(space.doorCount > 0 ? space.doorCount : 0).append(" 扇\n");
+            sb.append("     其中双层: ").append(space.doubleDoorCount).append(" 扇\n");
+
+            sb.append("\n  [Level] 保鲜等级: ");
             if (space.avgResistance >= 0.70) {
                 sb.append("SHELVED_3 (最佳防腐)");
             } else if (space.avgResistance >= 0.45) {
@@ -68,7 +72,7 @@ public class CellarDebugInfo {
             sb.append("\n");
 
         } else {
-            sb.append("  地窖状态: ❌ 无效\n");
+            sb.append("  地窖状态: [FAIL] 无效\n");
             sb.append("  原因: ");
             if (space == null) {
                 sb.append("未检测到封闭空间");
@@ -79,15 +83,15 @@ public class CellarDebugInfo {
         }
 
         if (!nearbyContainers.isEmpty()) {
-            sb.append("\n  📦 范围内容器 (10 格):\n");
+            sb.append("\n  [Cellar] 范围内容器 (10 格):\n");
             for (var ci : nearbyContainers) {
                 sb.append("     ").append(ci.pos().toShortString())
                     .append(" ").append(ci.name())
-                    .append("    — 地窖有效: ").append(ci.climateValid() ? "✅" : "❌").append("\n");
+                    .append("    — 地窖有效: ").append(ci.climateValid() ? "[OK]" : "[FAIL]").append("\n");
             }
         }
 
-        sb.append("\n  🔄 追踪状态:\n");
+        sb.append("\n  [Track] 追踪状态:\n");
         sb.append("     已追踪地窖空间数: ").append(totalTrackedSpaces).append("\n");
         sb.append("     待重检空间队列: ").append(dirtySpacesQueue).append("\n");
         sb.append("     待检容器队列: ").append(dirtyContainersQueue).append("\n");

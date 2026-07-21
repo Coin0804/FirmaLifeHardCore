@@ -16,6 +16,9 @@ public class CellarSpace {
     /** 墙体方块位置 */
     public final Set<BlockPos> wallPositions = new HashSet<>();
 
+    /** 内部障碍物位置（食物架、箱子等——需要通知 ClimateReceiver 但不计入墙体） */
+    public final Set<BlockPos> obstaclePositions = new HashSet<>();
+
     /** 种子位置（用于重检测的 floodfill 起点） */
     public BlockPos seedPos;
 
@@ -27,6 +30,8 @@ public class CellarSpace {
 
     /** 墙体统计 */
     public int highCount, mediumCount, lowCount, unmatchedCount;
+    /** 门统计 */
+    public int doorCount, doubleDoorCount;
 
     /** 上次成功检测的 tick */
     public long lastCheckedTick;
@@ -50,6 +55,7 @@ public class CellarSpace {
         this.effectiveTemperature = 0f;
         this.interiorPositions.clear();
         this.wallPositions.clear();
+        this.obstaclePositions.clear();
     }
 
     /** 检测结果记录 — 不可变 */

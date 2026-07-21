@@ -1,61 +1,73 @@
 package com.yukimods.firmalifehardcore.mixin;
 
-import com.eerussianguy.firmalife.common.blockentities.ClimateReceiver;
 import com.eerussianguy.firmalife.common.blockentities.ClimateType;
 import com.eerussianguy.firmalife.common.blockentities.FoodShelfBlockEntity;
 import com.eerussianguy.firmalife.common.items.FLFoodTraits;
-import com.yukimods.firmalifehardcore.attachment.CellarAttachment;
-import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
-import com.yukimods.firmalifehardcore.util.CellarSpace;
-import com.yukimods.firmalifehardcore.util.CellarTracker;
+import com.yukimods.firmalifehardcore.util.CellarTierAccessor;
+import net.dries007.tfc.common.component.food.FoodCapability;
 import net.dries007.tfc.common.component.food.FoodTrait;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * Mixin FoodShelfBlockEntity.getFoodTrait() — 使用 CellarTracker 的地窖有效温度替代全局气候温度。
- */
 @Mixin(value = FoodShelfBlockEntity.class, remap = false)
-public class FoodShelfBlockEntityMixin {
+public class FoodShelfBlockEntityMixin implements CellarTierAccessor {
 
-    /**
-     * 在 getFoodTrait() 返回前拦截，用地窖有效温度重新选择 FoodTrait。
-     * 如果 CellarTracker 未检测到有效空间，回退到原返回值。
-     */
+    protected int firmalifehardcore$cellarTier = 0;
+
+    @Override
+    public int firmalifehardcore$getCellarTier() { return this.firmalifehardcore$cellarTier; }
+    @Override
+    public void firmalifehardcore$setCellarTier(int tier) { this.firmalifehardcore$cellarTier = tier; }
+
+    @Inject(method = "setValid", at = @At("HEAD"))
+    private void onSetValid(Level level, net.minecraft.core.BlockPos pos, boolean valid, int tier, ClimateType climate, CallbackInfo ci) {
+        if (climate == ClimateType.CELLAR) {
+            this.firmalifehardcore$cellarTier = valid ? tier : 0;
+            if (valid) {
+                // 先清旧 trait，原代码随后 updatePreservation(true) 会加新的，避免叠加
+                FoodShelfBlockEntity self = (FoodShelfBlockEntity) (Object) this;
+                self.updatePreservation(false);
+            }
+        }
+    }
+
     @Inject(method = "getFoodTrait", at = @At("HEAD"), cancellable = true)
     private void onGetFoodTrait(CallbackInfoReturnable<Holder<FoodTrait>> cir) {
         FoodShelfBlockEntity self = (FoodShelfBlockEntity) (Object) this;
-        Level level = self.getLevel();
-        if (!(level instanceof ServerLevel serverLevel)) return;
-        if (!self.isClimateValid()) return; // 不在有效气候空间中，保持原逻辑
+        if (!self.isClimateValid()) return;
 
-        // 查询 CellarTracker
-        CellarTracker tracker = CellarAttachment.get(serverLevel);
-        if (tracker == null) return;
+        switch (this.firmalifehardcore$cellarTier) {
+            case 2 -> cir.setReturnValue(FLFoodTraits.SHELVED_3);
+            case 1 -> cir.setReturnValue(FLFoodTraits.SHELVED_2);
+            default -> cir.setReturnValue(FLFoodTraits.SHELVED);
+        }
+    }
 
-        BlockPos pos = self.getBlockPos();
-        CellarSpace.CellarResult result = tracker.query(pos);
-        if (result == null || !result.valid()) return;
+    /** 加载时跳过 updatePreservation，由 CellarTracker 的 setValid 统一处理 tier */
+    @Redirect(method = "onLoadAdditional",
+        at = @At(value = "INVOKE",
+            target = "Lcom/eerussianguy/firmalife/common/blockentities/FoodShelfBlockEntity;updatePreservation(Z)V"),
+        remap = false)
+    private void skipUpdatePreservationOnLoad(FoodShelfBlockEntity instance, boolean preserved) {}
 
-        // 使用地窖有效温度判定保鲜等级
-        float T_cellar = result.effectiveTemperature();
-        float level2Threshold = FirmaLifeHardCoreConfig.SERVER.level2ResistanceThreshold.get().floatValue();
-        float level3Threshold = FirmaLifeHardCoreConfig.SERVER.level3ResistanceThreshold.get().floatValue();
-        float avgResistance = result.avgResistance();
-
-        // 优先用热阻判定（复古物语式），其次用温度
-        if (avgResistance >= level3Threshold) {
-            cir.setReturnValue(FLFoodTraits.SHELVED_3);
-        } else if (avgResistance >= level2Threshold) {
-            cir.setReturnValue(FLFoodTraits.SHELVED_2);
-        } else {
-            cir.setReturnValue(FLFoodTraits.SHELVED);
+    /** 取物品时清掉所有可能的保鲜 trait，而非只清当前 getFoodTrait() 返回的那个 */
+    @Redirect(method = "use",
+        at = @At(value = "INVOKE",
+            target = "Lnet/dries007/tfc/common/component/food/FoodCapability;removeTrait(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/Holder;)V"),
+        remap = false)
+    private void onRemoveTraitInUse(ItemStack stack, Holder<FoodTrait> ignored) {
+        FoodShelfBlockEntity self = (FoodShelfBlockEntity) (Object) this;
+        for (Holder<FoodTrait> trait : self.getPossibleTraits()) {
+            FoodCapability.removeTrait(stack, trait);
         }
     }
 }

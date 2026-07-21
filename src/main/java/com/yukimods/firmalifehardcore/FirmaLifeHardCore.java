@@ -2,12 +2,14 @@ package com.yukimods.firmalifehardcore;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.yukimods.firmalifehardcore.attachment.CellarAttachment;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import com.yukimods.firmalifehardcore.event.CellarEventHandler;
 import com.yukimods.firmalifehardcore.util.CellarDebugInfo;
 import com.yukimods.firmalifehardcore.util.CellarTracker;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -62,47 +64,34 @@ public class FirmaLifeHardCore {
         LOGGER.info("[Server] Registered /firmalifehardcore cellar info|recalc|list");
     }
 
-    private int cmdCellarInfo(CommandContext<net.minecraft.commands.CommandSourceStack> ctx) {
+    private int cmdCellarInfo(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = (ServerLevel) player.level();
         BlockPos pos = player.blockPosition();
 
         CellarTracker tracker = CellarAttachment.get(level);
-        if (tracker == null) {
-            ctx.getSource().sendFailure(Component.literal("CellarTracker 未初始化"));
-            return 0;
-        }
-
         CellarDebugInfo info = tracker.getDebugInfo(pos, level);
         ctx.getSource().sendSuccess(() -> Component.literal(info.format()), false);
         return Command.SINGLE_SUCCESS;
     }
 
-    private int cmdCellarRecalc(CommandContext<net.minecraft.commands.CommandSourceStack> ctx) {
+    private int cmdCellarRecalc(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = (ServerLevel) player.level();
         BlockPos pos = player.blockPosition();
 
         CellarTracker tracker = CellarAttachment.get(level);
-        if (tracker == null) {
-            ctx.getSource().sendFailure(Component.literal("CellarTracker 未初始化"));
-            return 0;
-        }
-
         tracker.forceRecalc(pos, level);
-        ctx.getSource().sendSuccess(() -> Component.literal("已强制重算位置 " + pos.toShortString() + " 的地窖状态，使用 /firmalifehardcore cellar info 查看结果"), true);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "已强制重算位置 " + pos.toShortString() + " 的地窖状态"), true);
         return Command.SINGLE_SUCCESS;
     }
 
-    private int cmdCellarList(CommandContext<net.minecraft.commands.CommandSourceStack> ctx) {
-        ServerLevel level = ctx.getSource().getPlayerOrException().serverLevel();
+    private int cmdCellarList(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        ServerLevel level = (ServerLevel) player.level();
 
         CellarTracker tracker = CellarAttachment.get(level);
-        if (tracker == null) {
-            ctx.getSource().sendFailure(Component.literal("CellarTracker 未初始化"));
-            return 0;
-        }
-
         String list = tracker.listAll();
         ctx.getSource().sendSuccess(() -> Component.literal(list), false);
         return Command.SINGLE_SUCCESS;
