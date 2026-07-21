@@ -1,0 +1,12 @@
+{
+  "values": [
+    "#tfc:rock_blocks",
+    "#tfc:dirt",
+    "#tfc:fired_bricks",
+    "#tfc:mud_bricks",
+    "#minecraft:stone_bricks",
+    "minecraft:packed_mud",
+    "#firmalife:cellar_insulation",
+    "#firmalifehardcore:reinforced_soils"
+  ]
+}

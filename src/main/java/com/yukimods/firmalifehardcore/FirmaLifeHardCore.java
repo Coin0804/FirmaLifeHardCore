@@ -1,0 +1,110 @@
+package com.yukimods.firmalifehardcore;
+
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.context.CommandContext;
+import com.yukimods.firmalifehardcore.attachment.CellarAttachment;
+import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
+import com.yukimods.firmalifehardcore.event.CellarEventHandler;
+import com.yukimods.firmalifehardcore.util.CellarDebugInfo;
+import com.yukimods.firmalifehardcore.util.CellarTracker;
+import net.minecraft.commands.Commands;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@Mod(FirmaLifeHardCore.MOD_ID)
+public class FirmaLifeHardCore {
+
+    public static final String MOD_ID = "firmalifehardcore";
+    public static final Logger LOGGER = LoggerFactory.getLogger("FirmaLife HardCore");
+
+    public FirmaLifeHardCore(IEventBus modEventBus, ModContainer container) {
+        LOGGER.info("FirmaLife HardCore initializing — VS-style cellar/greenhouse global tracker");
+
+        // 注册配置
+        container.registerConfig(ModConfig.Type.SERVER, FirmaLifeHardCoreConfig.getServerSpec());
+
+        // 注册 Attachment
+        CellarAttachment.register(modEventBus);
+
+        // 注册事件处理器
+        NeoForge.EVENT_BUS.register(CellarEventHandler.class);
+        NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, this::onRegisterCommands);
+
+        LOGGER.info("FirmaLife HardCore initialized");
+    }
+
+    // ===== /firmalifehardcore cellar info|recalc|list =====
+
+    private void onRegisterCommands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(
+            Commands.literal("firmalifehardcore")
+                .requires(src -> src.hasPermission(2))
+                .then(Commands.literal("cellar")
+                    .then(Commands.literal("info")
+                        .executes(this::cmdCellarInfo))
+                    .then(Commands.literal("recalc")
+                        .requires(src -> src.hasPermission(4))
+                        .executes(this::cmdCellarRecalc))
+                    .then(Commands.literal("list")
+                        .executes(this::cmdCellarList))
+                )
+        );
+        LOGGER.info("[Server] Registered /firmalifehardcore cellar info|recalc|list");
+    }
+
+    private int cmdCellarInfo(CommandContext<net.minecraft.commands.CommandSourceStack> ctx) {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        ServerLevel level = player.serverLevel();
+        BlockPos pos = player.blockPosition();
+
+        CellarTracker tracker = CellarAttachment.get(level);
+        if (tracker == null) {
+            ctx.getSource().sendFailure(Component.literal("CellarTracker 未初始化"));
+            return 0;
+        }
+
+        CellarDebugInfo info = tracker.getDebugInfo(pos, level);
+        ctx.getSource().sendSuccess(() -> Component.literal(info.format()), false);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int cmdCellarRecalc(CommandContext<net.minecraft.commands.CommandSourceStack> ctx) {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        ServerLevel level = player.serverLevel();
+        BlockPos pos = player.blockPosition();
+
+        CellarTracker tracker = CellarAttachment.get(level);
+        if (tracker == null) {
+            ctx.getSource().sendFailure(Component.literal("CellarTracker 未初始化"));
+            return 0;
+        }
+
+        tracker.forceRecalc(pos, level);
+        ctx.getSource().sendSuccess(() -> Component.literal("已强制重算位置 " + pos.toShortString() + " 的地窖状态，使用 /firmalifehardcore cellar info 查看结果"), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int cmdCellarList(CommandContext<net.minecraft.commands.CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getPlayerOrException().serverLevel();
+
+        CellarTracker tracker = CellarAttachment.get(level);
+        if (tracker == null) {
+            ctx.getSource().sendFailure(Component.literal("CellarTracker 未初始化"));
+            return 0;
+        }
+
+        String list = tracker.listAll();
+        ctx.getSource().sendSuccess(() -> Component.literal(list), false);
+        return Command.SINGLE_SUCCESS;
+    }
+}

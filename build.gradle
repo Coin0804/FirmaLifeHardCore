@@ -1,0 +1,72 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.120'
+}
+
+tasks.named('wrapper', Wrapper).configure {
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    filesMatching('**/*.toml') {
+        expand(project.properties)
+    }
+    filesMatching('**/*.mcmeta') {
+        expand(project.properties)
+    }
+}
+
+base {
+    archivesName = "${mod_id}-neoforge-${mod_version}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+neoForge {
+    version = project.neo_version
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+repositories {
+    maven { url = 'https://maven.aliyun.com/repository/central' }
+    mavenCentral()
+}
+
+dependencies {
+    // TFC — compileOnly（tag 引用 + Climate API）
+    compileOnly files('../../mods/TerraFirmaCraft-NeoForge-1.21.1-4.2.5.jar')
+    // Firmalife — compileOnly（Mixin 目标）
+    compileOnly files('../../mods/[群峦生活] Firmalife-1.21.1-2.2.1.jar')
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/repo"
+        }
+    }
+}

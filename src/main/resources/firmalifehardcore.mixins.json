@@ -1,0 +1,11 @@
+{
+    "required": true,
+    "package": "com.yukimods.firmalifehardcore.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "FoodShelfBlockEntityMixin",
+        "HangerBlockEntityMixin"
+    ],
+    "client": [],
+    "server": []
+}
