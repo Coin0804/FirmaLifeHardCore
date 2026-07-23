@@ -17,7 +17,7 @@ Enclosed spaces are detected via BFS floodfill. Every solid wall block contribut
 | Tier | Resistance | Typical Blocks |
 |------|-----------|----------------|
 | **HIGH** | 0.80 | Stone, dirt, bricks, packed mud, sealed bricks, reinforced soil |
-| **MEDIUM** | 0.45 | Planks, logs, lumber, support beams, wattle |
+| **MEDIUM** | 0.55 | Planks, logs, lumber, support beams, wattle |
 | **LOW** | 0.15 | Glass, metal blocks |
 
 Doors and trapdoors reduce insulation when open. Double doors grant a 1.2× bonus.
@@ -25,27 +25,27 @@ Doors and trapdoors reduce insulation when open. Double doors grant a 1.2× bonu
 The effective cellar temperature is calculated as:
 
 ```
-T_cellar = T_outside × (1 − clamp(avgResistance, 0, 0.95))
+T_cellar = 4 + (T_outside − 4) × (1 − clamp(avgR, 0, 1))
 ```
 
-### Container Modifiers
+### Container Preservation
 
-Different storage types have different preservation multipliers (smaller = better):
+Supported container types:
 
-| Container | Modifier |
-|-----------|----------|
-| Food Shelf | 0.50 |
-| Hanger | 0.35 |
-| Jarbnet (clay pot) | 0.20 |
-| Keg | 0.40 |
-| Cheese Wheel | 0.30 |
+| Container | Preservation Mechanism |
+|-----------|----------------------|
+| Food Shelf | ClimateReceiver + 3-tier SHELVED trait |
+| Hanger | ClimateReceiver + 3-tier HUNG trait |
+| Large Vessel | onSeal appends SHELVED / onUnseal removes |
 
 ### Reinforced Soil
 
-A new block — `firmalifehardcore:reinforced_dirt` — stabilizes TFC's collapsible dirt. Created by using a **hammer** (main hand) on dirt while holding **support beams** (offhand). The reinforced soil:
-- Prevents collapse/landslides (acts as TFC support beam)
-- Has HIGH thermal resistance (0.80)
-- Drops regular dirt when broken (beams are not recovered)
+8 soil variants × 2 states (normal = vertical anchor, beam = horizontal support). Created by holding a **support beam** (main hand) + **hammer** (offhand), right-clicking reinforceable ground (dirt, grass, farmland, grass path). Sneak+right-click extends downward up to 3.
+
+- **Auto-connection**: on placement/conversion, scans E/W and N/S axes (up to 5) for support beam endpoints. Both ends found → becomes `_beam` variant (provides TFC support). Endpoints lost → reverts. Adjacent blocks re-check on state change.
+- **Textures**: normal = beam mark on top/bottom, TFC dirt on sides. Beam = TFC dirt on top/bottom, beam mark on sides.
+- **TFC Integration**: `_beam` variants in `tfc:support` (2/2/4) + `#tfc:support_beams` tag. Normal variants in `#tfc:support_beams` tag only.
+- **Jade**: Optional tooltip shows support status on landslide-prone blocks.
 
 ### Commands
 
@@ -108,31 +108,31 @@ MIT — see [LICENSE](LICENSE)
 | 等级 | 热阻 | 典型方块 |
 |------|------|----------|
 | **HIGH** | 0.80 | 石头、泥土、砖块、夯实泥、密封砖、带支撑土 |
-| **MEDIUM** | 0.45 | 木板、原木、木材、支撑梁、编织墙 |
+| **MEDIUM** | 0.55 | 木板、原木、木材、支撑梁、编织墙 |
 | **LOW** | 0.15 | 玻璃、金属方块 |
 
 开关门影响保温——开门时该方向热阻归零。双门提供 1.2× 加成。
 
-地窖有效温度：`T_地窖 = T_室外 × (1 − 热阻)`
+地窖有效温度：`T_地窖 = 4 + (T_室外 − 4) × (1 − 平均热阻)`
 
-### 容器修正
+### 容器保鲜
 
-不同容器保鲜倍率不同（越小越好）：
+已支持的容器类型：
 
-| 容器 | 修正 |
-|------|------|
-| 食物架 | 0.50 |
-| 悬挂架 | 0.35 |
-| 罐架（陶罐） | 0.20 |
-| 酒桶 | 0.40 |
-| 奶酪轮 | 0.30 |
+| 容器 | 保鲜机制 |
+|------|---------|
+| 食物架 (FoodShelf) | ClimateReceiver + 三级 SHELVED trait |
+| 悬挂架 (Hanger) | ClimateReceiver + 三级 HUNG trait |
+| 大缸 (LargeVessel) | onSeal 追加 SHELVED / onUnseal 清除 |
 
 ### 带支撑的土
 
-新增方块 `firmalifehardcore:reinforced_dirt`，解决 TFC 泥土塌方问题。主手拿**锤**、副手拿**支撑梁**，右键泥土即可生成。特性：
-- 防止塌方/滑坡（作为 TFC 支撑柱）
-- HIGH 热阻 (0.80)
-- 破坏时掉落原版泥土（支撑梁不可回收）
+8 种土壤变体 × 2 状态（竖梁锚点 / 横梁支撑）。**主手支撑梁** + **副手锤**，右键地面方块（泥土/草地/耕地/草径）。潜行右键向下延伸最多 3 格。
+
+- **自动连接**：放置/转换时扫描 E/W、N/S 轴（最多 5 格），两端均有端点→变 `_beam` 横梁（提供 TFC 支撑），端点消失→退回。状态变化时邻居重检。
+- **纹理**：竖梁 = 顶底梁标记 + 侧面 TFC 土。横梁 = 顶底 TFC 土 + 侧面梁标记。
+- **TFC 集成**：`_beam` 在 `tfc:support`(2/2/4) + `#tfc:support_beams`。普通变体仅 `#tfc:support_beams`。
+- **Jade**：可选 tooltip，滑坡方块显示支撑状态。
 
 ### 指令
 

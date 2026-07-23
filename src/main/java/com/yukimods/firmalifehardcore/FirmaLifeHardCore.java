@@ -4,8 +4,11 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.yukimods.firmalifehardcore.attachment.CellarAttachment;
+import com.yukimods.firmalifehardcore.block.ModBlocks;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import com.yukimods.firmalifehardcore.event.CellarEventHandler;
+import com.yukimods.firmalifehardcore.event.ReinforcedDirtHandler;
+import com.yukimods.firmalifehardcore.item.ModItems;
 import com.yukimods.firmalifehardcore.util.CellarDebugInfo;
 import com.yukimods.firmalifehardcore.util.CellarTracker;
 import net.minecraft.commands.Commands;
@@ -38,8 +41,14 @@ public class FirmaLifeHardCore {
         // 注册 Attachment
         CellarAttachment.register(modEventBus);
 
+        // 注册方块/物品/创造栏
+        ModBlocks.BLOCKS.register(modEventBus);
+        ModItems.ITEMS.register(modEventBus);
+        ModCreativeTab.CREATIVE_TABS.register(modEventBus);
+
         // 注册事件处理器
         NeoForge.EVENT_BUS.register(CellarEventHandler.class);
+        NeoForge.EVENT_BUS.register(ReinforcedDirtHandler.class);
         NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, this::onRegisterCommands);
 
         LOGGER.info("FirmaLife HardCore initialized");

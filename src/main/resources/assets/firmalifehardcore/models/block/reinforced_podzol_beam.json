@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "tfc:block/dirt/podzol",
+    "top": "tfc:block/dirt/podzol",
+    "side": "firmalifehardcore:block/reinforced_podzol"
+  }
+}

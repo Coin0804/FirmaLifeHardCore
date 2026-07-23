@@ -1,0 +1,13 @@
+{
+  "block.firmalifehardcore.reinforced_entisol": "带支撑的新成土",
+  "block.firmalifehardcore.reinforced_aridisol": "带支撑的旱成土",
+  "block.firmalifehardcore.reinforced_oxisol": "带支撑的氧化土",
+  "block.firmalifehardcore.reinforced_fluvisol": "带支撑的冲积土",
+  "block.firmalifehardcore.reinforced_andisol": "带支撑的火山土",
+  "block.firmalifehardcore.reinforced_podzol": "带支撑的灰化土",
+  "block.firmalifehardcore.reinforced_alfisol": "带支撑的淋溶土",
+  "block.firmalifehardcore.reinforced_mollisol": "带支撑的软土",
+  "itemGroup.firmalifehardcore": "FirmaLife HardCore",
+  "jade.firmalifehardcore.collapse.self_supported": "已支撑",
+  "jade.firmalifehardcore.collapse.self_unsupported": "未支撑！可能滑坡"
+}

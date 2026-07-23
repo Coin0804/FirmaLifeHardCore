@@ -2,7 +2,6 @@ package com.yukimods.firmalifehardcore.util;
 
 import com.eerussianguy.firmalife.common.blockentities.ClimateReceiver;
 import com.eerussianguy.firmalife.common.blockentities.ClimateType;
-import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -10,7 +9,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.saveddata.SavedData;
 import net.dries007.tfc.util.climate.Climate;
 import org.jetbrains.annotations.Nullable;
 
@@ -78,19 +76,10 @@ public class CellarTracker {
             spaceIt.remove();
             spacesProcessed++;
 
-            FirmaLifeHardCore.LOGGER.info("[CellarTracker] REVALIDATE seed={} old interior={} walls={}",
-                oldSpace.seedPos.toShortString(), oldSpace.interiorPositions.size(), oldSpace.wallPositions.size());
-
             CellarSpace newSpace = CellarDetector.detectFromSeed(level, oldSpace.seedPos, scanRadius);
             if (newSpace != null && newSpace.valid) {
-                boolean changed = newSpace.interiorPositions.size() != oldSpace.interiorPositions.size()
-                    || newSpace.wallPositions.size() != oldSpace.wallPositions.size();
-                FirmaLifeHardCore.LOGGER.info("[CellarTracker] → VALID changed={} new interior={} walls={}",
-                    changed, newSpace.interiorPositions.size(), newSpace.wallPositions.size());
                 replaceSpace(level, oldSpace, newSpace);
             } else {
-                String reason = newSpace != null ? "avgR<min" : "null (OOB/overflow)";
-                FirmaLifeHardCore.LOGGER.info("[CellarTracker] → INVALIDATED reason={}", reason);
                 invalidateSpace(level, oldSpace);
             }
         }
@@ -104,7 +93,6 @@ public class CellarTracker {
 
             if (hasAdjacentSpace(pos)) continue;
 
-            FirmaLifeHardCore.LOGGER.info("[CellarTracker] DISCOVER at {}", pos.toShortString());
             List<CellarSpace> results = CellarDetector.detectAll(level, pos, scanRadius);
             if (!results.isEmpty()) {
                 for (CellarSpace ns : results) {

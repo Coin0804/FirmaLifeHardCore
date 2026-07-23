@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "firmalifehardcore:block/reinforced_alfisol",
+    "top": "firmalifehardcore:block/reinforced_alfisol",
+    "side": "tfc:block/dirt/alfisol"
+  }
+}

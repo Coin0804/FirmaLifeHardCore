@@ -27,7 +27,6 @@ public class FirmaLifeHardCoreConfig {
         public final ModConfigSpec.DoubleValue minThermalResistance;
         public final ModConfigSpec.IntValue maxSpacesPerTick;
         public final ModConfigSpec.IntValue maxContainersPerTick;
-        public final ModConfigSpec.DoubleValue maxPreservationCap;
         public final ModConfigSpec.DoubleValue doubleDoorMultiplier;
 
         public final ModConfigSpec.DoubleValue resistanceHigh;
@@ -36,11 +35,6 @@ public class FirmaLifeHardCoreConfig {
 
         public final ModConfigSpec.DoubleValue level2ResistanceThreshold;
         public final ModConfigSpec.DoubleValue level3ResistanceThreshold;
-
-        public final ModConfigSpec.DoubleValue containerModifierFoodShelf;
-        public final ModConfigSpec.DoubleValue containerModifierHanger;
-        public final ModConfigSpec.DoubleValue containerModifierJarbnet;
-        public final ModConfigSpec.DoubleValue containerModifierKeg;
 
         public final ModConfigSpec.IntValue reinforcedSoilMaxDepth;
         public final ModConfigSpec.IntValue hammerDurabilityCost;
@@ -60,16 +54,13 @@ public class FirmaLifeHardCoreConfig {
             maxContainersPerTick = builder
                 .comment("每 tick 最多检查的容器数")
                 .defineInRange("maxContainersPerTick", 5, 1, 50);
-            maxPreservationCap = builder
-                .comment("地窖保鲜效果上限 (1.0 = 100%)")
-                .defineInRange("maxPreservationCap", 0.95, 0.5, 1.0);
             doubleDoorMultiplier = builder
                 .comment("双门加成倍率")
                 .defineInRange("doubleDoorMultiplier", 1.2, 1.0, 2.0);
 
             builder.push("resistance");
             resistanceHigh = builder.defineInRange("high", 0.80, 0.0, 1.0);
-            resistanceMedium = builder.defineInRange("medium", 0.45, 0.0, 1.0);
+            resistanceMedium = builder.defineInRange("medium", 0.55, 0.0, 1.0);
             resistanceLow = builder.defineInRange("low", 0.15, 0.0, 1.0);
             builder.pop();
 
@@ -80,21 +71,6 @@ public class FirmaLifeHardCoreConfig {
             level3ResistanceThreshold = builder
                 .comment("三级保鲜热阻阈值")
                 .defineInRange("level3", 0.70, 0.0, 1.0);
-            builder.pop();
-
-            builder.push("containerModifiers");
-            containerModifierFoodShelf = builder
-                .comment("食物架容器修正（越小保鲜越好）")
-                .defineInRange("foodShelf", 0.5, 0.05, 1.0);
-            containerModifierHanger = builder
-                .comment("悬挂架容器修正")
-                .defineInRange("hanger", 0.35, 0.05, 1.0);
-            containerModifierJarbnet = builder
-                .comment("罐架容器修正（陶罐模拟）")
-                .defineInRange("jarbnet", 0.2, 0.05, 1.0);
-            containerModifierKeg = builder
-                .comment("酒桶容器修正")
-                .defineInRange("keg", 0.4, 0.05, 1.0);
             builder.pop();
 
             builder.push("reinforcedSoil");

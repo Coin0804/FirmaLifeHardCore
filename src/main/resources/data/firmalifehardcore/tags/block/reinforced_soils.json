@@ -1,3 +1,20 @@
 {
-  "values": []
+  "values": [
+    "firmalifehardcore:reinforced_entisol",
+    "firmalifehardcore:reinforced_aridisol",
+    "firmalifehardcore:reinforced_oxisol",
+    "firmalifehardcore:reinforced_fluvisol",
+    "firmalifehardcore:reinforced_andisol",
+    "firmalifehardcore:reinforced_podzol",
+    "firmalifehardcore:reinforced_alfisol",
+    "firmalifehardcore:reinforced_mollisol",
+    "firmalifehardcore:reinforced_entisol_beam",
+    "firmalifehardcore:reinforced_aridisol_beam",
+    "firmalifehardcore:reinforced_oxisol_beam",
+    "firmalifehardcore:reinforced_fluvisol_beam",
+    "firmalifehardcore:reinforced_andisol_beam",
+    "firmalifehardcore:reinforced_podzol_beam",
+    "firmalifehardcore:reinforced_alfisol_beam",
+    "firmalifehardcore:reinforced_mollisol_beam"
+  ]
 }

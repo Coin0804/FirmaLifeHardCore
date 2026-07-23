@@ -7,6 +7,7 @@
     "#tfc:mud_bricks",
     "#minecraft:stone_bricks",
     "minecraft:packed_mud",
-    "#firmalife:cellar_insulation"
+    "#firmalife:cellar_insulation",
+    "#firmalifehardcore:reinforced_soils"
   ]
 }

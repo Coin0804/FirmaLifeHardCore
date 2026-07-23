@@ -1,13 +1,11 @@
 package com.yukimods.firmalifehardcore.event;
 
-import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.attachment.CellarAttachment;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import com.yukimods.firmalifehardcore.util.CellarSavedData;
 import com.yukimods.firmalifehardcore.util.CellarTracker;
 import com.yukimods.firmalifehardcore.util.ThermalConductivity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
@@ -66,9 +64,6 @@ public class CellarEventHandler {
         if (!isRelevantBlock(oldState)) return;
         if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
 
-        FirmaLifeHardCore.LOGGER.info("[CellarEvent] BREAK delayed pos={} block={}",
-            event.getPos().toShortString(), oldState.getBlock().getName().getString());
-
         CellarTracker tracker = CellarAttachment.get(serverLevel);
         if (tracker != null) tracker.scheduleBreak(event.getPos().immutable());
     }
@@ -85,10 +80,6 @@ public class CellarEventHandler {
 
         CellarTracker tracker = CellarAttachment.get(serverLevel);
         if (tracker == null) return;
-
-        FirmaLifeHardCore.LOGGER.info("[CellarEvent] {} pos={} block={} tier={} inWall={} spaces={}",
-            action, pos.toShortString(), state.getBlock().getName().getString(),
-            ThermalConductivity.getTierName(state), tracker.isInAnyWall(pos), tracker.spaceCount());
 
         tracker.markDirty(pos, FirmaLifeHardCoreConfig.SERVER.scanRadius.get());
     }

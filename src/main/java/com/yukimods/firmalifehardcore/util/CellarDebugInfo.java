@@ -1,9 +1,6 @@
 package com.yukimods.firmalifehardcore.util;
 
-import com.eerussianguy.firmalife.common.blockentities.ClimateReceiver;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.state.BlockState;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;

@@ -1,6 +1,5 @@
 package com.yukimods.firmalifehardcore.util;
 
-import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import net.dries007.tfc.util.climate.Climate;
 import net.minecraft.core.BlockPos;
@@ -11,13 +10,9 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-
 import java.util.*;
 
 public final class CellarDetector {
-
-    private static final Logger LOG = FirmaLifeHardCore.LOGGER;
 
     /** 竖直方向最大扫描距离（上下各5格） */
     private static final int VERTICAL_RADIUS = 5;
@@ -50,13 +45,11 @@ public final class CellarDetector {
                 candidates.add(neighbor);
         }
 
-        LOG.info("[CellarDetect] detectAll origin={} candidates={}", origin.toShortString(), candidates.size());
         for (BlockPos seed : candidates) {
             CellarSpace space = detectOne(level, seed, scanRadius, "DISCOVER");
             if (space != null && space.valid && !seenInteriors.containsAll(space.interiorPositions)) {
                 seenInteriors.addAll(space.interiorPositions);
                 results.add(space);
-                LOG.info("[CellarDetect]  NEW seed={} interior={} walls={} avgR={:.2f}", seed.toShortString(), space.interiorPositions.size(), space.wallPositions.size(), space.avgResistance);
             }
         }
         return results;
@@ -72,8 +65,6 @@ public final class CellarDetector {
         );
         int maxSize = h * h * v;  // H² × V：圆柱/椭圆近似上限
 
-        LOG.info("[CellarDetect] {} seed={} box H±{} V±{}", tag, seedPos.toShortString(), h, v);
-
         CellarSpace space = new CellarSpace(seedPos);
         Set<BlockPos> visited = new HashSet<>();
         Deque<BlockPos> queue = new ArrayDeque<>();
@@ -86,7 +77,6 @@ public final class CellarDetector {
 
         while (!queue.isEmpty()) {
             if (visited.size() > maxSize) {
-                LOG.info("[CellarDetect] {} seed={} OVERFLOW", tag, seedPos.toShortString());
                 return null;
             }
 
@@ -94,8 +84,6 @@ public final class CellarDetector {
             for (Direction dir : Direction.values()) {
                 mutable.set(current).move(dir);
                 if (!bounds.isInside(mutable)) {
-                    BlockPos out = mutable.immutable();
-                    LOG.info("[CellarDetect] {} seed={} OOB at {} dir={}", tag, seedPos.toShortString(), out.toShortString(), dir);
                     return null;
                 }
                 if (visited.contains(mutable)) continue;
@@ -115,6 +103,7 @@ public final class CellarDetector {
                     }
                     case OBSTACLE -> {
                         visited.add(pos);
+                        queue.add(pos);
                         space.obstaclePositions.add(pos);
                         counts[2]++;
                     }
@@ -122,13 +111,10 @@ public final class CellarDetector {
             }
         }
 
-        LOG.info("[CellarDetect] {} seed={} T={} W={} O={}", tag, seedPos.toShortString(), counts[0], counts[1], counts[2]);
-
         if (space.interiorPositions.isEmpty() || space.wallPositions.isEmpty()) return null;
 
         calculateThermal(level, space);
         if (space.avgResistance < FirmaLifeHardCoreConfig.SERVER.minThermalResistance.get()) {
-            LOG.info("[CellarDetect] {} seed={} FAIL avgR={:.2f}<min", tag, seedPos.toShortString(), space.avgResistance);
             space.valid = false;
             return space;
         }
@@ -184,7 +170,7 @@ public final class CellarDetector {
         space.avgResistance = validWallCount > 0 ? Math.min(1f, totalResistance / validWallCount) : 0f;
 
         float outdoor = Climate.getAverageTemperature(level, space.seedPos);
-        float cap = FirmaLifeHardCoreConfig.SERVER.maxPreservationCap.get().floatValue();
-        space.effectiveTemperature = outdoor * (1f - Math.min(cap, space.avgResistance));
+        // 4摄氏度为基准温度
+        space.effectiveTemperature =4 + (outdoor-4) * (1f - Math.min(1f, space.avgResistance));
     }
 }

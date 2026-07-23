@@ -1,0 +1,13 @@
+{
+  "block.firmalifehardcore.reinforced_entisol": "Reinforced Entisol",
+  "block.firmalifehardcore.reinforced_aridisol": "Reinforced Aridisol",
+  "block.firmalifehardcore.reinforced_oxisol": "Reinforced Oxisol",
+  "block.firmalifehardcore.reinforced_fluvisol": "Reinforced Fluvisol",
+  "block.firmalifehardcore.reinforced_andisol": "Reinforced Andisol",
+  "block.firmalifehardcore.reinforced_podzol": "Reinforced Podzol",
+  "block.firmalifehardcore.reinforced_alfisol": "Reinforced Alfisol",
+  "block.firmalifehardcore.reinforced_mollisol": "Reinforced Mollisol",
+  "itemGroup.firmalifehardcore": "FirmaLife HardCore",
+  "jade.firmalifehardcore.collapse.self_supported": "Supported",
+  "jade.firmalifehardcore.collapse.self_unsupported": "Unsupported! May landslide"
+}
