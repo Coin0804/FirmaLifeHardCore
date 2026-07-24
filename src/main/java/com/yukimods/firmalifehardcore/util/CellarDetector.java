@@ -1,6 +1,9 @@
 package com.yukimods.firmalifehardcore.util;
 
+import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
+import net.dries007.tfc.util.calendar.Calendars;
+import net.dries007.tfc.util.calendar.ICalendar;
 import net.dries007.tfc.util.climate.Climate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -114,11 +117,6 @@ public final class CellarDetector {
         if (space.interiorPositions.isEmpty() || space.wallPositions.isEmpty()) return null;
 
         calculateThermal(level, space);
-        if (space.avgResistance < FirmaLifeHardCoreConfig.SERVER.minThermalResistance.get()) {
-            space.valid = false;
-            return space;
-        }
-
         space.valid = true;
         space.lastCheckedTick = level.getServer().getTickCount();
         return space;
@@ -129,29 +127,42 @@ public final class CellarDetector {
         int doors = 0, doubleDoors = 0;
         float totalResistance = 0f;
         int validWallCount = 0;
+        int totalRoof = 0, canopyRoof = 0;
 
         for (BlockPos wallPos : space.wallPositions) {
             BlockState wallState = level.getBlockState(wallPos);
+
+            // 棚顶判定：墙块下方紧邻内部空间 → 这是屋顶
+            boolean isRoof = space.interiorPositions.contains(wallPos.below());
+            if (isRoof) {
+                totalRoof++;
+                // 棚顶需要玻璃且能看到天空才计入
+                if (ThermalConductivity.isGreenhouseRoof(wallState) && level.canSeeSky(wallPos))
+                    canopyRoof++;
+            }
+
             float res = ThermalConductivity.getResistance(wallState);
             if (ThermalConductivity.isDoor(wallState)) { //门不算墙
                 if (wallState.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)){ // 普通门
                     if(wallState.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.UPPER){
-                        // 上半
-                        continue; 
+                        // 上半，不计入屋顶（门不算屋顶）
+                        if (isRoof) { totalRoof--; if (ThermalConductivity.isGreenhouseRoof(wallState)) canopyRoof--; }
+                        continue;
                     }else{
-                        // 正常门只算下半
+                        // 正常门只算下半，不计入屋顶
+                        if (isRoof) { totalRoof--; if (ThermalConductivity.isGreenhouseRoof(wallState)) canopyRoof--; }
                         res = res==0?res:FirmaLifeHardCoreConfig.SERVER.resistanceMedium.get().floatValue();
                         if (ThermalConductivity.hasDoubleDoor(level, wallPos, wallState)) {
                             // 双门
                             doubleDoors++;
                             float multiplier = FirmaLifeHardCoreConfig.SERVER.doubleDoorMultiplier.get().floatValue();
-                            // 按双门计算热阻
                             totalResistance += res * multiplier ;
                             continue;
                         }// else 算单门
                     }
                 } // else 是活板门
-                // 单门
+                // 单门，不计入屋顶
+                if (isRoof) { totalRoof--; if (ThermalConductivity.isGreenhouseRoof(wallState)) canopyRoof--; }
                 doors++;
                 totalResistance += res ;
             }else{ //不是门
@@ -169,8 +180,25 @@ public final class CellarDetector {
         space.doorCount = doors; space.doubleDoorCount = doubleDoors;
         space.avgResistance = validWallCount > 0 ? Math.min(1f, totalResistance / validWallCount) : 0f;
 
-        float outdoor = Climate.getAverageTemperature(level, space.seedPos);
-        // 4摄氏度为基准温度
-        space.effectiveTemperature =4 + (outdoor-4) * (1f - Math.min(1f, space.avgResistance));
+        space.canopyRatio = totalRoof > 0 ? (float) canopyRoof / totalRoof : 0f;
+
+        // 直接调 ClimateModel.getInstantTemperature 获取真实室外即时温度，绕过 ClimateMixin
+        ICalendar cal = Calendars.get(level);
+        float outdoor = Climate.get(level).getInstantTemperature(
+            level, space.seedPos, cal.getCalendarTicks(), cal.getCalendarDaysInMonth());
+        space.effectiveTemperature = space.getBaseTemperature()
+            + (outdoor - space.getBaseTemperature()) * (1f - Math.min(1f, space.avgResistance));
+
+        // 诊断日志：空间分类及关键参数
+        FirmaLifeHardCore.LOGGER.debug("[CellarDetector] seed={} type={} avgR={} canopy={}% baseT={} outdoor={} effective={} walls={}",
+            space.seedPos.toShortString(),
+            space.isGreenhouse() ? "GREENHOUSE" : "CELLAR",
+            String.format("%.2f", space.avgResistance),
+            String.format("%.0f", space.canopyRatio * 100f),
+            String.format("%.1f", space.getBaseTemperature()),
+            String.format("%.1f", outdoor),
+            String.format("%.1f", space.effectiveTemperature),
+            space.wallPositions.size()
+        );
     }
 }

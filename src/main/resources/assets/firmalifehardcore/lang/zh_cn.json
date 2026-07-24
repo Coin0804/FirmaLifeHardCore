@@ -9,5 +9,9 @@
   "block.firmalifehardcore.reinforced_mollisol": "带支撑的软土",
   "itemGroup.firmalifehardcore": "FirmaLife HardCore",
   "jade.firmalifehardcore.collapse.self_supported": "已支撑",
-  "jade.firmalifehardcore.collapse.self_unsupported": "未支撑！可能滑坡"
+  "jade.firmalifehardcore.collapse.self_unsupported": "未支撑！可能滑坡",
+  "jade.firmalifehardcore.crop_temperature": "§e室内温度:§r %s %s",
+  "jade.firmalifehardcore.crop_temp_low": "§b[过低]",
+  "jade.firmalifehardcore.crop_temp_high": "§6[过高]",
+  "jade.firmalifehardcore.crop_temp_valid": "§a[适宜]"
 }

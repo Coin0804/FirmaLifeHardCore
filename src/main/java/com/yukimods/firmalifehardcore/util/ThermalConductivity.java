@@ -23,7 +23,9 @@ public final class ThermalConductivity {
     public static final TagKey<Block> TAG_MEDIUM = create("thermal_insulation/medium");
     public static final TagKey<Block> TAG_LOW    = create("thermal_insulation/low");
     public static final TagKey<Block> TAG_DOOR   = create("cellar_doors");
-    public static final TagKey<Block> TAG_CONTAINER = create("container_blocks");
+    public static final TagKey<Block> TAG_GREENHOUSE_ROOF = create("greenhouse_roof");
+    public static final TagKey<Block> TAG_PLANTERS = TagKey.create(Registries.BLOCK,
+        ResourceLocation.fromNamespaceAndPath("firmalife", "planters"));
 
     private static TagKey<Block> create(String path) {
         return TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(FirmaLifeHardCore.MOD_ID, path));
@@ -72,9 +74,9 @@ public final class ThermalConductivity {
         return false;
     }
 
-    /** 检查方块是否在容器 tag 中 */
-    public static boolean isContainer(BlockState state) {
-        return state.is(TAG_CONTAINER);
+    /** 检查方块是否为温室棚顶（玻璃类透明方块，用于顶部透光） */
+    public static boolean isGreenhouseRoof(BlockState state) {
+        return state.is(TAG_GREENHOUSE_ROOF);
     }
 
     private static Direction getDoorFacing(BlockState state) {

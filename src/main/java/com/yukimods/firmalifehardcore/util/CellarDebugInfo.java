@@ -1,5 +1,6 @@
 package com.yukimods.firmalifehardcore.util;
 
+import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import net.minecraft.core.BlockPos;
 
 import java.text.DecimalFormat;
@@ -34,7 +35,13 @@ public class CellarDebugInfo {
         sb.append("  位置: ").append(pos.toShortString()).append("\n");
 
         if (space != null && space.valid) {
-            sb.append("  地窖状态: [OK] 有效 (CellarTracker 已缓存)\n\n");
+            String typeLabel = space.isGreenhouse() ? "温室" : "地窖";
+            sb.append("  ").append(typeLabel).append("状态: [OK] 有效 (CellarTracker 已缓存)");
+            if (space.isGreenhouse()) {
+                sb.append("\n     棚顶比例: ").append(Math.round(space.canopyRatio * 100))
+                    .append("%  基准温度: ").append(DF1.format(space.getBaseTemperature())).append("°C");
+            }
+            sb.append("\n\n");
 
             sb.append("  [Wall] 墙体数据:\n");
             sb.append("     平均热阻: ").append(DF.format(space.avgResistance)).append(" / 1.00\n");
@@ -49,9 +56,15 @@ public class CellarDebugInfo {
                 sb.append("     未匹配:             ").append(space.unmatchedCount).append(" 块\n");
             }
 
-            sb.append("\n  [Temp] 温度:\n");
-            sb.append("     室外温度 (TFC):  ").append(DF1.format(outdoorTemp)).append("°C\n");
-            sb.append("     地窖有效温度:    ").append(DF1.format(space.effectiveTemperature)).append("°C")
+            sb.append("\n  [Temp] 温度");
+            if (space.isGreenhouse()) sb.append(" (温室公式: 基准=").append(DF1.format(space.getBaseTemperature()))
+                .append("°C, canopy=").append(Math.round(space.canopyRatio * 100)).append("%)");
+            sb.append(":\n");
+            sb.append("     室外即时温度:    ").append(DF1.format(outdoorTemp)).append("°C\n");
+            if (space.isGreenhouse()) {
+                sb.append("     基准温度:        ").append(DF1.format(space.getBaseTemperature())).append("°C\n");
+            }
+            sb.append("     ").append(typeLabel).append("有效温度:    ").append(DF1.format(space.effectiveTemperature)).append("°C")
                 .append("  (保温 ").append(Math.round(space.avgResistance * 100)).append("%)\n");
 
             sb.append("\n  [Door] 门:\n");
@@ -59,12 +72,12 @@ public class CellarDebugInfo {
             sb.append("     其中双层: ").append(space.doubleDoorCount).append(" 扇\n");
 
             sb.append("\n  [Level] 保鲜等级: ");
-            if (space.avgResistance >= 0.70) {
-                sb.append("SHELVED_3 (最佳防腐)");
-            } else if (space.avgResistance >= 0.45) {
-                sb.append("SHELVED_2 (中等防腐)");
-            } else {
-                sb.append("SHELVED (基础防腐)");
+            int tier = CellarInventoryHelper.tierFromTemperature(space.effectiveTemperature);
+            switch (tier) {
+                case 3 -> sb.append("SHELVED_3 (≤0°C 最佳防腐)");
+                case 2 -> sb.append("SHELVED_2 (≤8°C 中等防腐)");
+                case 1 -> sb.append("SHELVED (≤16°C 基础防腐)");
+                default -> sb.append("无效 (>" + DF1.format(FirmaLifeHardCoreConfig.SERVER.tier1Temperature.get()) + "°C 温度过高)");
             }
             sb.append("\n");
 

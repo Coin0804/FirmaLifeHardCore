@@ -11,6 +11,7 @@ import net.dries007.tfc.common.component.food.FoodCapability;
 import net.dries007.tfc.common.component.food.FoodTrait;
 import org.jetbrains.annotations.Nullable;
 
+import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import java.util.Set;
 
 /**
@@ -33,7 +34,7 @@ public final class CellarInventoryHelper {
         CellarTracker tracker = CellarAttachment.get(sl);
         CellarSpace.CellarResult result = tracker.query(pos);
         if (result == null || !result.valid()) return null;
-        return traitForTier(tierFromResistance(result.avgResistance()));
+        return traitForTier(tierFromTemperature(result.effectiveTemperature()));
     }
 
     /** tier → SHELVED trait */
@@ -45,9 +46,11 @@ public final class CellarInventoryHelper {
         };
     }
 
-    static int tierFromResistance(float avgR) {
-        if (avgR >= 0.70f) return 2;
-        if (avgR >= 0.45f) return 1;
+    /** 根据有效温度映射保鲜等级：3=SHELVED_3(≤0°C), 2=SHELVED_2(≤8°C), 1=SHELVED(≤16°C), 0=不保鲜 */
+    static int tierFromTemperature(float effectiveTemp) {
+        if (effectiveTemp <= FirmaLifeHardCoreConfig.SERVER.tier3Temperature.get().floatValue()) return 3;
+        if (effectiveTemp <= FirmaLifeHardCoreConfig.SERVER.tier2Temperature.get().floatValue()) return 2;
+        if (effectiveTemp <= FirmaLifeHardCoreConfig.SERVER.tier1Temperature.get().floatValue()) return 1;
         return 0;
     }
 

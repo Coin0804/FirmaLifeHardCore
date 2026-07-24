@@ -9,5 +9,9 @@
   "block.firmalifehardcore.reinforced_mollisol": "Reinforced Mollisol",
   "itemGroup.firmalifehardcore": "FirmaLife HardCore",
   "jade.firmalifehardcore.collapse.self_supported": "Supported",
-  "jade.firmalifehardcore.collapse.self_unsupported": "Unsupported! May landslide"
+  "jade.firmalifehardcore.collapse.self_unsupported": "Unsupported! May landslide",
+  "jade.firmalifehardcore.crop_temperature": "§eIndoor Temp:§r %s %s",
+  "jade.firmalifehardcore.crop_temp_low": "§b[Too Cold]",
+  "jade.firmalifehardcore.crop_temp_high": "§6[Too Hot]",
+  "jade.firmalifehardcore.crop_temp_valid": "§a[Suitable]"
 }

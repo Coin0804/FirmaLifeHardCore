@@ -1,9 +1,11 @@
 package com.yukimods.firmalifehardcore.event;
 
+import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.attachment.CellarAttachment;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import com.yukimods.firmalifehardcore.util.CellarSavedData;
 import com.yukimods.firmalifehardcore.util.CellarTracker;
+import com.eerussianguy.firmalife.common.blockentities.ClimateReceiver;
 import com.yukimods.firmalifehardcore.util.ThermalConductivity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -55,12 +57,16 @@ public class CellarEventHandler {
     @SubscribeEvent
     public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         BlockState state = event.getPlacedBlock();
+        FirmaLifeHardCore.LOGGER.debug("[EventHandler] PLACE pos={} block={} relevant={}",
+            event.getPos().toShortString(), state.getBlock().getDescriptionId(), isRelevantBlock(state));
         if (isRelevantBlock(state)) trigger(event.getLevel(), event.getPos(), state, "PLACE");
     }
 
     @SubscribeEvent
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
         BlockState oldState = event.getState();
+        FirmaLifeHardCore.LOGGER.debug("[EventHandler] BREAK pos={} block={} relevant={}",
+            event.getPos().toShortString(), oldState.getBlock().getDescriptionId(), isRelevantBlock(oldState));
         if (!isRelevantBlock(oldState)) return;
         if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
 
@@ -71,16 +77,18 @@ public class CellarEventHandler {
     private static boolean isRelevantBlock(BlockState state) {
         return ThermalConductivity.isRelevant(state)
             || ThermalConductivity.isDoor(state)
-            || ThermalConductivity.isContainer(state);
+            || state.getBlock() instanceof ClimateReceiver
+            || state.is(ThermalConductivity.TAG_PLANTERS);
     }
 
     private static void trigger(LevelAccessor lv, BlockPos pos, BlockState state, String action) {
         if (!(lv instanceof ServerLevel serverLevel)) return;
-        if (lv.isClientSide()) return;
 
         CellarTracker tracker = CellarAttachment.get(serverLevel);
         if (tracker == null) return;
 
+        FirmaLifeHardCore.LOGGER.debug("[EventHandler] trigger {} pos={} trackerSpaces={}",
+            action, pos.toShortString(), tracker.spaceCount());
         tracker.markDirty(pos, FirmaLifeHardCoreConfig.SERVER.scanRadius.get());
     }
 }

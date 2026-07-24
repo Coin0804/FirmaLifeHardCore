@@ -1,5 +1,6 @@
 package com.yukimods.firmalifehardcore.util;
 
+import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import net.minecraft.core.BlockPos;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,6 +29,18 @@ public class CellarSpace {
     /** 地窖有效温度 */
     public float effectiveTemperature;
 
+    /** 棚顶比例 (0~1) */
+    public float canopyRatio;
+
+    public boolean isGreenhouse() {
+        return canopyRatio >= FirmaLifeHardCoreConfig.SERVER.greenhouseGlassRatio.get().floatValue();
+    }
+
+    public float getBaseTemperature() {
+        if (!isGreenhouse()) return 4f;
+        return 4f + FirmaLifeHardCoreConfig.SERVER.greenhouseCanopyMultiplier.get().floatValue() * canopyRatio;
+    }
+
     /** 墙体统计 */
     public int highCount, mediumCount, lowCount, unmatchedCount;
     /** 门统计 */
@@ -53,6 +66,7 @@ public class CellarSpace {
         this.valid = false;
         this.avgResistance = 0f;
         this.effectiveTemperature = 0f;
+        this.canopyRatio = 0f;
         this.interiorPositions.clear();
         this.wallPositions.clear();
         this.obstaclePositions.clear();
