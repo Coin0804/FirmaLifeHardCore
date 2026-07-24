@@ -1,1 +1,16 @@
-{"variants":{"":{"model":"firmalifehardcore:block/reinforced_podzol"}}}
+{
+  "variants": {
+    "axis_x=false,axis_z=false": {
+      "model": "firmalifehardcore:block/reinforced_podzol_none"
+    },
+    "axis_x=true,axis_z=false": {
+      "model": "firmalifehardcore:block/reinforced_podzol_x"
+    },
+    "axis_x=false,axis_z=true": {
+      "model": "firmalifehardcore:block/reinforced_podzol_z"
+    },
+    "axis_x=true,axis_z=true": {
+      "model": "firmalifehardcore:block/reinforced_podzol_both"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "firmalifehardcore:block/reinforced_soil_horizontal",
+  "textures": {
+    "particle": "tfc:block/dirt/podzol",
+    "top": "tfc:block/dirt/podzol",
+    "bottom": "tfc:block/dirt/podzol",
+    "north": "firmalifehardcore:block/reinforced_podzol_end_horiz",
+    "south": "firmalifehardcore:block/reinforced_podzol_end_horiz",
+    "east": "firmalifehardcore:block/reinforced_podzol_side_horiz",
+    "west": "firmalifehardcore:block/reinforced_podzol_side_horiz"
+  }
+}

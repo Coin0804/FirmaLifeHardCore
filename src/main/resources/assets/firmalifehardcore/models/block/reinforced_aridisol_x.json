@@ -1,0 +1,12 @@
+{
+  "parent": "firmalifehardcore:block/reinforced_soil_vertical",
+  "textures": {
+    "particle": "firmalifehardcore:block/reinforced_aridisol_side",
+    "top": "firmalifehardcore:block/reinforced_aridisol",
+    "bottom": "firmalifehardcore:block/reinforced_aridisol",
+    "north": "firmalifehardcore:block/reinforced_aridisol_side_cross",
+    "south": "firmalifehardcore:block/reinforced_aridisol_side_cross",
+    "east": "firmalifehardcore:block/reinforced_aridisol_end",
+    "west": "firmalifehardcore:block/reinforced_aridisol_end"
+  }
+}

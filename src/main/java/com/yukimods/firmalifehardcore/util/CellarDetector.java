@@ -11,14 +11,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public final class CellarDetector {
-
-    /** 竖直方向最大扫描距离（上下各5格） */
-    private static final int VERTICAL_RADIUS = 5;
 
     private CellarDetector() {}
 
@@ -31,11 +27,11 @@ public final class CellarDetector {
     }
 
     @Nullable
-    public static CellarSpace detectFromSeed(Level level, BlockPos seedPos, int scanRadius) {
-        return detectOne(level, seedPos, scanRadius, "REVALIDATE");
+    public static CellarSpace detectFromSeed(Level level, BlockPos seedPos) {
+        return detectOne(level, seedPos);
     }
 
-    public static List<CellarSpace> detectAll(Level level, BlockPos origin, int scanRadius) {
+    public static List<CellarSpace> detectAll(Level level, BlockPos origin) {
         List<CellarSpace> results = new ArrayList<>();
         Set<BlockPos> seenInteriors = new HashSet<>();
 
@@ -49,7 +45,7 @@ public final class CellarDetector {
         }
 
         for (BlockPos seed : candidates) {
-            CellarSpace space = detectOne(level, seed, scanRadius, "DISCOVER");
+            CellarSpace space = detectOne(level, seed);
             if (space != null && space.valid && !seenInteriors.containsAll(space.interiorPositions)) {
                 seenInteriors.addAll(space.interiorPositions);
                 results.add(space);
@@ -58,37 +54,39 @@ public final class CellarDetector {
         return results;
     }
 
+    /**
+     * BFS floodfill 检测单个封闭空间。
+     * 每步动态追踪 interior 的 AABB——任一方向 span 超过配置限制即 OOB，
+     * 避免跑完整个 BFS 才发现房间太大，节省算力。
+     * 完成后以 AABB 最小角点作为规范种子位置（{@code (minX, minY, minZ)}）。
+     */
     @Nullable
-    private static CellarSpace detectOne(Level level, BlockPos seedPos, int horizontalRadius, String tag) {
-        int v = VERTICAL_RADIUS;
-        int h = horizontalRadius;
-        BoundingBox bounds = new BoundingBox(
-            seedPos.getX() - h, seedPos.getY() - v, seedPos.getZ() - h,
-            seedPos.getX() + h, seedPos.getY() + v, seedPos.getZ() + h
-        );
-        int maxSize = h * h * v;  // H² × V：圆柱/椭圆近似上限
+    private static CellarSpace detectOne(Level level, BlockPos seedPos) {
+        int maxHorizSpan = FirmaLifeHardCoreConfig.SERVER.maxHorizontalSpan.get();
+        int maxVertSpan  = FirmaLifeHardCoreConfig.SERVER.maxVerticalSpan.get();
+        // visited 上限：全覆盖体积，防止极端情况的最后防线
+        int maxSize = (maxHorizSpan + 5) * (maxHorizSpan + 5) * (maxVertSpan + 5);
 
         CellarSpace space = new CellarSpace(seedPos);
         Set<BlockPos> visited = new HashSet<>();
         Deque<BlockPos> queue = new ArrayDeque<>();
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
-        int[] counts = new int[3]; // T, W, O
+
+        // AABB 追踪——初始化为种子位置
+        int minX = seedPos.getX(), maxX = seedPos.getX();
+        int minY = seedPos.getY(), maxY = seedPos.getY();
+        int minZ = seedPos.getZ(), maxZ = seedPos.getZ();
 
         visited.add(seedPos);
         queue.add(seedPos);
         space.interiorPositions.add(seedPos.immutable());
 
         while (!queue.isEmpty()) {
-            if (visited.size() > maxSize) {
-                return null;
-            }
+            if (visited.size() > maxSize) return null;  // 最后防线
 
             BlockPos current = queue.poll();
             for (Direction dir : Direction.values()) {
                 mutable.set(current).move(dir);
-                if (!bounds.isInside(mutable)) {
-                    return null;
-                }
                 if (visited.contains(mutable)) continue;
 
                 BlockPos pos = mutable.immutable();
@@ -97,24 +95,55 @@ public final class CellarDetector {
                         visited.add(pos);
                         queue.add(pos);
                         space.interiorPositions.add(pos);
-                        counts[0]++;
-                    }
-                    case WALL -> {
-                        visited.add(pos);
-                        space.wallPositions.add(pos);
-                        counts[1]++;
+                        // fall-through: 更新 AABB + OOB 检查
+                        int x = pos.getX(), y = pos.getY(), z = pos.getZ();
+                        if (x < minX) minX = x; else if (x > maxX) maxX = x;
+                        if (y < minY) minY = y; else if (y > maxY) maxY = y;
+                        if (z < minZ) minZ = z; else if (z > maxZ) maxZ = z;
+                        if (maxX - minX + 1 > maxHorizSpan
+                            || maxY - minY + 1 > maxVertSpan
+                            || maxZ - minZ + 1 > maxHorizSpan) {
+                            return null;
+                        }
                     }
                     case OBSTACLE -> {
                         visited.add(pos);
                         queue.add(pos);
                         space.obstaclePositions.add(pos);
-                        counts[2]++;
+                        // OBSTACLE 也更新 AABB，防止通过岩石泄漏
+                        int x = pos.getX(), y = pos.getY(), z = pos.getZ();
+                        if (x < minX) minX = x; else if (x > maxX) maxX = x;
+                        if (y < minY) minY = y; else if (y > maxY) maxY = y;
+                        if (z < minZ) minZ = z; else if (z > maxZ) maxZ = z;
+                        if (maxX - minX + 1 > maxHorizSpan
+                            || maxY - minY + 1 > maxVertSpan
+                            || maxZ - minZ + 1 > maxHorizSpan) {
+                            return null;
+                        }
+                    }
+                    case WALL -> {
+                        visited.add(pos);
+                        space.wallPositions.add(pos);
                     }
                 }
             }
         }
 
         if (space.interiorPositions.isEmpty() || space.wallPositions.isEmpty()) return null;
+
+        // 规范化种子位置：从 interior 中选 X 最小 → Y 最小 → Z 最小的真实位置
+        // 不用 AABB 角点 (minX,minY,minZ)，因为三个轴的最小值可能来自不同方块，
+        // 组合出的角点在 L 形等不规则房间中可能不在地窖内部
+        BlockPos canonicalSeed = seedPos;
+        int bestX = Integer.MAX_VALUE, bestY = Integer.MAX_VALUE, bestZ = Integer.MAX_VALUE;
+        for (BlockPos ip : space.interiorPositions) {
+            int x = ip.getX(), y = ip.getY(), z = ip.getZ();
+            if (x < bestX || (x == bestX && y < bestY) || (x == bestX && y == bestY && z < bestZ)) {
+                canonicalSeed = ip;
+                bestX = x; bestY = y; bestZ = z;
+            }
+        }
+        space.seedPos = canonicalSeed;
 
         calculateThermal(level, space);
         space.valid = true;

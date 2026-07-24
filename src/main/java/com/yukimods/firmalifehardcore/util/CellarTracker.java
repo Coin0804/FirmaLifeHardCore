@@ -32,8 +32,8 @@ public class CellarTracker {
     /** 待重检的空间（去重） */
     private final Set<CellarSpace> dirtySpaces = new LinkedHashSet<>();
 
-    /** 待检查的容器位置 */
-    private final Deque<BlockPos> dirtyContainers = new ArrayDeque<>();
+    /** 待发现新空间的位置 */
+    private final Deque<BlockPos> pendingDiscoveries = new ArrayDeque<>();
 
     /** 延迟处理的破坏事件 pos → 剩余tick（相同位置重复破坏刷新为5） */
     private final Map<BlockPos, Integer> delayedBreaks = new HashMap<>();
@@ -55,8 +55,6 @@ public class CellarTracker {
 
     public void tick(ServerLevel level) {
         int maxSpaces = FirmaLifeHardCoreConfig.SERVER.maxSpacesPerTick.get();
-        int maxPositions = FirmaLifeHardCoreConfig.SERVER.maxContainersPerTick.get();
-        int scanRadius = FirmaLifeHardCoreConfig.SERVER.scanRadius.get();
         long currentTick = level.getServer().getTickCount();
 
         // 0. 处理延迟的破坏事件：倒计时 → 到 0 的转为正式标记
@@ -68,7 +66,7 @@ public class CellarTracker {
             return false;
         });
         for (BlockPos pos : ready) {
-            markDirty(pos, scanRadius);
+            markDirty(pos);
         }
 
         // 1. 重检脏空间 — 从原种子重跑 BFS（不用 detectAll，只需检测一个种子）
@@ -79,7 +77,7 @@ public class CellarTracker {
             spaceIt.remove();
             spacesProcessed++;
 
-            CellarSpace newSpace = CellarDetector.detectFromSeed(level, oldSpace.seedPos, scanRadius);
+            CellarSpace newSpace = CellarDetector.detectFromSeed(level, oldSpace.seedPos);
             if (newSpace != null && newSpace.valid) {
                 replaceSpace(level, oldSpace, newSpace);
             } else {
@@ -87,23 +85,17 @@ public class CellarTracker {
             }
         }
 
-        // 2. 处理待检位置 — 只对不在已知空间附近的尝试发现新空间
-        int positionsProcessed = 0;
-        while (!dirtyContainers.isEmpty() && positionsProcessed < maxPositions) {
-            BlockPos pos = dirtyContainers.poll();
+        // 2. 处理待发现位置 — 对不在已知空间附近的尝试发现新空间
+        while (!pendingDiscoveries.isEmpty()) {
+            BlockPos pos = pendingDiscoveries.poll();
             if (pos == null) continue;
-            positionsProcessed++;
 
             if (hasAdjacentSpace(pos)) continue;
 
-            List<CellarSpace> results = CellarDetector.detectAll(level, pos, scanRadius);
-            if (!results.isEmpty()) {
-                for (CellarSpace ns : results) {
-                    insertSpace(ns);
-                    broadcastToContainers(level, ns);
-                }
-            } else {
-                updateContainerAt(level, pos, false, 0, ClimateType.CELLAR);
+            List<CellarSpace> results = CellarDetector.detectAll(level, pos);
+            for (CellarSpace ns : results) {
+                insertSpace(ns);
+                broadcastToContainers(level, ns);
             }
         }
 
@@ -126,27 +118,27 @@ public class CellarTracker {
     /**
      * 方块变更时调用。仅在变更影响区域存在容器时才将对应位置加入待检队列。
      */
-    public void markDirty(BlockPos changedPos, int scanRadius) {
+    public void markDirty(BlockPos changedPos) {
+        int maxHorizSpan = FirmaLifeHardCoreConfig.SERVER.maxHorizontalSpan.get();
         int nearCount = 0;
         // 标记相关 CellarSpace 重检
         for (CellarSpace space : allSpaces) {
-            if (isNearSpace(space, changedPos, scanRadius)) {
+            if (isNearSpace(space, changedPos)) {
                 dirtySpaces.add(space);
                 nearCount++;
             }
         }
 
         // 标记变更位置本身（作为潜在新空间种子）
-        dirtyContainers.add(changedPos.immutable());
+        pendingDiscoveries.add(changedPos.immutable());
 
-        FirmaLifeHardCore.LOGGER.debug("[CellarTracker] markDirty pos={} radius={} allSpaces={} nearSpaces={}",
-            changedPos.toShortString(), scanRadius, allSpaces.size(), nearCount);
+        FirmaLifeHardCore.LOGGER.debug("[CellarTracker] markDirty pos={} maxHorizSpan={} allSpaces={} nearSpaces={}",
+            changedPos.toShortString(), maxHorizSpan, allSpaces.size(), nearCount);
     }
 
     /** 强制重算（调试指令用） */
     public void forceRecalc(BlockPos pos, ServerLevel level) {
-        int scanRadius = FirmaLifeHardCoreConfig.SERVER.scanRadius.get();
-        List<CellarSpace> results = CellarDetector.detectAll(level, pos, scanRadius);
+        List<CellarSpace> results = CellarDetector.detectAll(level, pos);
         if (!results.isEmpty()) {
             // 移除旧的重叠空间
             for (CellarSpace ns : results) {
@@ -192,7 +184,7 @@ public class CellarTracker {
             level, pos, cal.getCalendarTicks(), cal.getCalendarDaysInMonth());
         info.totalTrackedSpaces = allSpaces.size();
         info.dirtySpacesQueue = dirtySpaces.size();
-        info.dirtyContainersQueue = dirtyContainers.size();
+        info.pendingDiscoveriesQueue = pendingDiscoveries.size();
         info.currentTick = level.getServer().getTickCount();
 
         // 扫描附近 10 格内的 ClimateReceiver
@@ -247,7 +239,7 @@ public class CellarTracker {
             sb.append("  (无已追踪空间)\n");
         }
         sb.append("dirtySpaces=").append(dirtySpaces.size())
-            .append(" dirtyContainers=").append(dirtyContainers.size());
+            .append(" pendingDiscoveries=").append(pendingDiscoveries.size());
         return sb.toString();
     }
 
@@ -337,10 +329,12 @@ public class CellarTracker {
         return false;
     }
 
-    private boolean isNearSpace(CellarSpace space, BlockPos pos, int margin) {
-        return Math.abs(space.seedPos.getX() - pos.getX()) <= margin * 2
-            && Math.abs(space.seedPos.getY() - pos.getY()) <= margin * 2
-            && Math.abs(space.seedPos.getZ() - pos.getZ()) <= margin * 2;
+    private boolean isNearSpace(CellarSpace space, BlockPos pos) {
+        int maxHorizSpan = FirmaLifeHardCoreConfig.SERVER.maxHorizontalSpan.get();
+        int maxVertSpan = FirmaLifeHardCoreConfig.SERVER.maxVerticalSpan.get();
+        return Math.abs(space.seedPos.getX() - pos.getX()) <= maxHorizSpan * 2
+            && Math.abs(space.seedPos.getY() - pos.getY()) <= maxVertSpan * 2
+            && Math.abs(space.seedPos.getZ() - pos.getZ()) <= maxHorizSpan * 2;
     }
 
     /** 清理长期无效的空间 */

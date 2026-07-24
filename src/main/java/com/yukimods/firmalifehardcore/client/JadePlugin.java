@@ -2,6 +2,7 @@ package com.yukimods.firmalifehardcore.client;
 
 import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import net.dries007.tfc.common.blocks.crop.CropBlock;
+import net.dries007.tfc.common.blocks.devices.ThermometerBlock;
 import net.minecraft.world.level.block.Block;
 import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaCommonRegistration;
@@ -18,6 +19,7 @@ public class JadePlugin implements IWailaPlugin {
     @Override
     public void register(IWailaCommonRegistration registration) {
         registration.registerBlockDataProvider(CropTemperatureProvider.INSTANCE, CropBlock.class);
+        registration.registerBlockDataProvider(ThermometerTemperatureProvider.INSTANCE, ThermometerBlock.class);
     }
 
     @Override
@@ -28,6 +30,9 @@ public class JadePlugin implements IWailaPlugin {
         );
         registration.registerBlockComponent(
             CropTemperatureProvider.INSTANCE, CropBlock.class
+        );
+        registration.registerBlockComponent(
+            ThermometerTemperatureProvider.INSTANCE, ThermometerBlock.class
         );
     }
 }

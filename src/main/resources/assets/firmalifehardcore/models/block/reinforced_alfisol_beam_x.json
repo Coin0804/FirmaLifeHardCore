@@ -1,0 +1,12 @@
+{
+  "parent": "firmalifehardcore:block/reinforced_soil_horizontal",
+  "textures": {
+    "particle": "tfc:block/dirt/alfisol",
+    "top": "tfc:block/dirt/alfisol",
+    "bottom": "tfc:block/dirt/alfisol",
+    "north": "firmalifehardcore:block/reinforced_alfisol_side_horiz",
+    "south": "firmalifehardcore:block/reinforced_alfisol_side_horiz",
+    "east": "firmalifehardcore:block/reinforced_alfisol_end_horiz",
+    "west": "firmalifehardcore:block/reinforced_alfisol_end_horiz"
+  }
+}

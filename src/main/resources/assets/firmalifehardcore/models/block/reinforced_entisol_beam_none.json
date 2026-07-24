@@ -1,0 +1,12 @@
+{
+  "parent": "firmalifehardcore:block/reinforced_soil_horizontal",
+  "textures": {
+    "particle": "tfc:block/dirt/entisol",
+    "top": "tfc:block/dirt/entisol",
+    "bottom": "tfc:block/dirt/entisol",
+    "north": "tfc:block/dirt/entisol",
+    "south": "tfc:block/dirt/entisol",
+    "east": "tfc:block/dirt/entisol",
+    "west": "tfc:block/dirt/entisol"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Cellar & Greenhouse System",
+  "category": "tfc:firmalife",
+  "icon": "minecraft:clock",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(thing)FirmaLife HardCore$() has completely rewritten the cellar and greenhouse mechanics. $(l)A Climate Station is no longer required$().$(br2)The vanilla Firmalife Climate Station recipe has been removed. Instead, the mod uses a $(l)fully automatic space detection system$() — simply enclose an area with qualifying blocks, and the system will automatically detect it and grant preservation or greenhouse effects to containers inside."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "How It Works",
+      "text": "$(li)When you place or break wall/container blocks, the system automatically scans the surrounding area.$()$(br)$(li)Once an enclosed space is detected, it calculates the average thermal resistance of the walls and derives the indoor effective temperature from the outdoor temperature.$()$(br)$(li)All $(l:firmalife/food_shelves)Food Shelves$(), $(l:firmalife/hangers)Hangers$(), and Large Vessels inside automatically receive the appropriate preservation trait.$()$(br)$(li)One space is rechecked every 5 seconds to keep state synchronized.$()"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Debug Commands",
+      "text": "$(thing)/firmalifehardcore cellar info$()$(br)View cellar/greenhouse detection details at your current position.$(br2)$(thing)/firmalifehardcore cellar list$()$(br)List all tracked spaces in the current dimension.$(br2)$(thing)/firmalifehardcore cellar recalc$()$(br)Force a rescan at your position (requires permission level 4)."
+    }
+  ],
+  "read_by_default": true,
+  "sortnum": 2
+}

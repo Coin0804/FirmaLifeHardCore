@@ -1,1 +1,16 @@
-{"variants":{"":{"model":"firmalifehardcore:block/reinforced_fluvisol"}}}
+{
+  "variants": {
+    "axis_x=false,axis_z=false": {
+      "model": "firmalifehardcore:block/reinforced_fluvisol_none"
+    },
+    "axis_x=true,axis_z=false": {
+      "model": "firmalifehardcore:block/reinforced_fluvisol_x"
+    },
+    "axis_x=false,axis_z=true": {
+      "model": "firmalifehardcore:block/reinforced_fluvisol_z"
+    },
+    "axis_x=true,axis_z=true": {
+      "model": "firmalifehardcore:block/reinforced_fluvisol_both"
+    }
+  }
+}

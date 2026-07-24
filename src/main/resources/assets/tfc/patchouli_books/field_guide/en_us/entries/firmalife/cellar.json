@@ -1,0 +1,28 @@
+{
+  "name": "Cellars (New)",
+  "category": "tfc:firmalife",
+  "icon": "firmalife:sealed_bricks",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(thing)FirmaLife HardCore$() has rewritten the cellar system. $(l)No Climate Station needed$() — the system automatically detects qualifying enclosed spaces.$(br2)Core principle: enclose an area with high $(l)thermal resistance$() blocks to reduce indoor temperature fluctuation. Indoor Temp = Base Temp + (Outdoor Temp − Base Temp) × (1 − Average Resistance)."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Thermal Resistance Tiers",
+      "text": "Blocks are categorized into three resistance tiers:$(br)$(li)$(thing)High (0.75)$(): Mud Bricks, Sealed Bricks, Sealed Brick Walls, Reinforced Soil$()$(br)$(li)$(thing)Medium (0.55)$(): Stone, Cobblestone, Rock Blocks, Dirt, Grass, Stone Bricks, Planks, Logs, Wattle, Support Beams, Obsidian$()$(br)$(li)$(thing)Low (0.25)$(): Glass, Glass Panes, Metal Blocks$()$(br2)Doors count as medium resistance. Double doors get a $(thing)4×$() multiplier."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Preservation Tiers",
+      "text": "Lower effective temperature = better preservation:$(br)$(li)$(thing)SHELVED$(): ≤ 16°C, basic preservation$()$(br)$(li)$(thing)SHELVED_2$(): ≤ 8°C, moderate preservation$()$(br)$(li)$(thing)SHELVED_3$(): ≤ 0°C, optimal preservation$()$(br2)Spaces above 16°C provide no preservation. Build cellars in cold biomes for the best results."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Building Tips",
+      "text": "$(li)Use high-resistance blocks (Sealed Bricks, Mud Bricks) for walls.$()$(br)$(li)Double doors are much more effective than single doors (4× bonus).$()$(br)$(li)Size limits: horizontal span ≤ 15 blocks, vertical ≤ 5 blocks.$()$(br)$(li)Place Food Shelves, Hangers, or Large Vessels inside after construction — they auto-receive preservation.$()$(br)$(li)Use a $(thing)Thermometer$()'s redstone signal to gauge indoor temperature.$()"
+    }
+  ],
+  "read_by_default": true,
+  "sortnum": 3
+}

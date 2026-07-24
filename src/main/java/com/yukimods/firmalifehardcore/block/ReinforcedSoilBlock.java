@@ -11,10 +11,15 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.HitResult;
 
 public class ReinforcedSoilBlock extends Block {
+
+    public static final BooleanProperty AXIS_X = BooleanProperty.create("axis_x");
+    public static final BooleanProperty AXIS_Z = BooleanProperty.create("axis_z");
 
     final ReinforcedSoilType soilType;
 
@@ -23,6 +28,12 @@ public class ReinforcedSoilBlock extends Block {
             .mapColor(MapColor.DIRT).strength(1.8f, 6.0f)
             .sound(SoundType.GRAVEL).requiresCorrectToolForDrops());
         this.soilType = soilType;
+        registerDefaultState(stateDefinition.any().setValue(AXIS_X, false).setValue(AXIS_Z, false));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(AXIS_X, AXIS_Z);
     }
 
     public ReinforcedSoilType getSoilType() { return soilType; }
@@ -39,10 +50,18 @@ public class ReinforcedSoilBlock extends Block {
     }
 
     static void trySwapToBeam(Level level, BlockPos pos) {
-        if (scanConnected(level, pos)) {
-            level.setBlock(pos, ModBlocks.getBeamAsBlock(
-                ((ReinforcedSoilBlock) level.getBlockState(pos).getBlock()).soilType
-            ).defaultBlockState(), 3);
+        BlockState state = level.getBlockState(pos);
+        if (!(state.getBlock() instanceof ReinforcedSoilBlock normal)) return;
+        // 属性：任意一端有支撑即标记（用于贴图）
+        boolean x = hasSupportOnAxis(level, pos, Direction.Axis.X);
+        boolean z = hasSupportOnAxis(level, pos, Direction.Axis.Z);
+        // 转横梁：两端都有支撑才转
+        if (hasBothSupportOnAxis(level, pos, Direction.Axis.X)
+            || hasBothSupportOnAxis(level, pos, Direction.Axis.Z)) {
+            level.setBlock(pos, ModBlocks.getBeamAsBlock(normal.soilType)
+                .defaultBlockState().setValue(AXIS_X, x).setValue(AXIS_Z, z), 3);
+        } else {
+            level.setBlock(pos, state.setValue(AXIS_X, x).setValue(AXIS_Z, z), 3);
         }
     }
 
@@ -52,14 +71,18 @@ public class ReinforcedSoilBlock extends Block {
         return new ItemStack(this);
     }
 
-    static boolean scanConnected(Level level, BlockPos pos) {
-        for (Direction.Axis axis : new Direction.Axis[]{Direction.Axis.X, Direction.Axis.Z}) {
-            Direction a = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE);
-            Direction b = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.NEGATIVE);
-            if (hasBeamEndpoint(level, pos, a) && hasBeamEndpoint(level, pos, b))
-                return true;
-        }
-        return false;
+    /** 任意一端有支撑（用于属性标记→贴图） */
+    static boolean hasSupportOnAxis(Level level, BlockPos pos, Direction.Axis axis) {
+        Direction a = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE);
+        Direction b = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.NEGATIVE);
+        return hasBeamEndpoint(level, pos, a) || hasBeamEndpoint(level, pos, b);
+    }
+
+    /** 两端都有支撑（用于判定是否转横梁） */
+    static boolean hasBothSupportOnAxis(Level level, BlockPos pos, Direction.Axis axis) {
+        Direction a = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE);
+        Direction b = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.NEGATIVE);
+        return hasBeamEndpoint(level, pos, a) && hasBeamEndpoint(level, pos, b);
     }
 
     private static boolean hasBeamEndpoint(Level level, BlockPos pos, Direction dir) {

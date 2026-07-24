@@ -1,1 +1,16 @@
-{"variants":{"":{"model":"firmalifehardcore:block/reinforced_andisol"}}}
+{
+  "variants": {
+    "axis_x=false,axis_z=false": {
+      "model": "firmalifehardcore:block/reinforced_andisol_none"
+    },
+    "axis_x=true,axis_z=false": {
+      "model": "firmalifehardcore:block/reinforced_andisol_x"
+    },
+    "axis_x=false,axis_z=true": {
+      "model": "firmalifehardcore:block/reinforced_andisol_z"
+    },
+    "axis_x=true,axis_z=true": {
+      "model": "firmalifehardcore:block/reinforced_andisol_both"
+    }
+  }
+}

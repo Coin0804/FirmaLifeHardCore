@@ -6,7 +6,8 @@
         "ClimateMixin",
         "FoodShelfBlockEntityMixin",
         "HangerBlockEntityMixin",
-        "LargeVesselBlockEntityMixin"
+        "LargeVesselBlockEntityMixin",
+        "ThermometerMixin"
     ],
     "client": [],
     "server": []

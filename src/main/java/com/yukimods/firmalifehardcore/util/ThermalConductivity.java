@@ -22,8 +22,9 @@ public final class ThermalConductivity {
     public static final TagKey<Block> TAG_HIGH   = create("thermal_insulation/high");
     public static final TagKey<Block> TAG_MEDIUM = create("thermal_insulation/medium");
     public static final TagKey<Block> TAG_LOW    = create("thermal_insulation/low");
-    public static final TagKey<Block> TAG_DOOR   = create("cellar_doors");
+    public static final TagKey<Block> TAG_DOOR       = create("cellar_doors");
     public static final TagKey<Block> TAG_GREENHOUSE_ROOF = create("greenhouse_roof");
+    public static final TagKey<Block> TAG_CONTAINERS  = create("cellar_containers");
     public static final TagKey<Block> TAG_PLANTERS = TagKey.create(Registries.BLOCK,
         ResourceLocation.fromNamespaceAndPath("firmalife", "planters"));
 

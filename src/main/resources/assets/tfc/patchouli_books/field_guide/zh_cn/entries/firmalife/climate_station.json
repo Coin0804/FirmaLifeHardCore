@@ -1,0 +1,27 @@
+{
+  "name": "地窖与温室系统",
+  "category": "tfc:firmalife",
+  "icon": "minecraft:clock",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(thing)FirmaLife HardCore$() 完全重写了地窖与温室机制，$(l)不再需要气候站$()。$(br2)原版 Firmalife 的气候站 (Climate Station) 配方已被移除。取而代之的是$(l)全自动空间检测系统$()——只需用符合条件的方块围成一个封闭空间，系统会自动识别并赋予内部的容器保鲜或温室效果。"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "工作原理",
+      "text": "$(li)放置或破坏墙体/容器方块时，系统自动扫描周围区域。$(br)$(li)检测到封闭空间后，计算墙体平均热阻，结合室外温度得出室内有效温度。$(br)$(li)内部的所有$(l:firmalife/food_shelves)食品架$()、$(l:firmalife/hangers)风干架$()和陶缸自动获得对应等级的保鲜 trait。$(br)$(li)每 5 秒自动重检一个空间，确保状态同步。"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "调试命令",
+      "text": "$(thing)/firmalifehardcore cellar info$()$(br)查看当前位置的地窖/温室检测详情。$(br2)$(thing)/firmalifehardcore cellar list$()$(br)列出当前维度所有已追踪的空间。$(br2)$(thing)/firmalifehardcore cellar recalc$()$(br)强制重新扫描当前位置（需要 4 级权限）。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(thing)FirmaLife HardCore$() 完全重写了温室机制，$(l)不再需要气候站$()。$(br2)原版 Firmalife 的气候站已被移除。温室现在通过$(l)玻璃屋顶比例$()自动判定——只要封闭空间的屋顶有足够比例的玻璃方块（默认 50%），系统就会将其识别为温室，内部温度将远高于室外。"
+    }
+  ],
+  "read_by_default": true,
+  "sortnum": 2
+}

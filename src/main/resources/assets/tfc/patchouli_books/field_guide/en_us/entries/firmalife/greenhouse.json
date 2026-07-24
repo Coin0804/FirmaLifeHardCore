@@ -1,0 +1,23 @@
+{
+  "name": "Greenhouses (New)",
+  "category": "tfc:firmalife",
+  "icon": "minecraft:glass",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(thing)FirmaLife HardCore$() has rewritten the greenhouse system. $(l)No Climate Station needed$() — detection is automatic.$(br2)The key to a greenhouse is the $(l)glass roof$(). An enclosed space is recognized as a greenhouse when its roof has at least $(thing)50%$() glass blocks. Glass must have a $(l)clear view of the sky$() to count."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Temperature Calculation",
+      "text": "Greenhouse Base Temp = 4°C + $(thing)40 × Canopy Ratio$().$(br2)Example: 100% glass roof → 44°C base. 50% glass roof → 24°C base.$(br2)Effective Temp = Base + (Outdoor − Base) × (1 − Average Resistance).$(br2)Wall resistance still matters — use high-resistance blocks for greenhouse walls to maintain warmth."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Building Tips",
+      "text": "$(li)Horizontal span ≤ 15 blocks, vertical ≤ 5 blocks.$()$(br)$(li)Greenhouse-specific blocks (Treated Wood, Copper, Iron, Stainless Steel) work, but regular blocks in the resistance tiers also work.$()$(br)$(li)Floors may be non-air blocks.$()$(br)$(li)Place $(l:firmalife/planters)Planters$() inside for year-round crop growth.$()"
+    }
+  ],
+  "read_by_default": true,
+  "sortnum": 7
+}

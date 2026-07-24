@@ -2,10 +2,8 @@ package com.yukimods.firmalifehardcore.event;
 
 import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.attachment.CellarAttachment;
-import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import com.yukimods.firmalifehardcore.util.CellarSavedData;
 import com.yukimods.firmalifehardcore.util.CellarTracker;
-import com.eerussianguy.firmalife.common.blockentities.ClimateReceiver;
 import com.yukimods.firmalifehardcore.util.ThermalConductivity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -77,7 +75,7 @@ public class CellarEventHandler {
     private static boolean isRelevantBlock(BlockState state) {
         return ThermalConductivity.isRelevant(state)
             || ThermalConductivity.isDoor(state)
-            || state.getBlock() instanceof ClimateReceiver
+            || state.is(ThermalConductivity.TAG_CONTAINERS)
             || state.is(ThermalConductivity.TAG_PLANTERS);
     }
 
@@ -89,6 +87,6 @@ public class CellarEventHandler {
 
         FirmaLifeHardCore.LOGGER.debug("[EventHandler] trigger {} pos={} trackerSpaces={}",
             action, pos.toShortString(), tracker.spaceCount());
-        tracker.markDirty(pos, FirmaLifeHardCoreConfig.SERVER.scanRadius.get());
+        tracker.markDirty(pos);
     }
 }

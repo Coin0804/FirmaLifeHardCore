@@ -1,13 +1,6 @@
 {
   "values": [
-    "#c:stones",
-    "#c:stones/smooth",
-    "#tfc:rock_blocks",
-    "#tfc:dirt",
-    "#tfc:grass",
     "#tfc:mud_bricks",
-    "#minecraft:stone_bricks",
-    "minecraft:packed_mud",
     "#firmalife:cellar_insulation",
     "#firmalifehardcore:reinforced_soils"
   ]

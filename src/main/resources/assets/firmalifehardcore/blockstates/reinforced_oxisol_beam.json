@@ -1,1 +1,16 @@
-{"variants":{"":{"model":"firmalifehardcore:block/reinforced_oxisol_beam"}}}
+{
+  "variants": {
+    "axis_x=false,axis_z=false": {
+      "model": "firmalifehardcore:block/reinforced_oxisol_beam_none"
+    },
+    "axis_x=true,axis_z=false": {
+      "model": "firmalifehardcore:block/reinforced_oxisol_beam_x"
+    },
+    "axis_x=false,axis_z=true": {
+      "model": "firmalifehardcore:block/reinforced_oxisol_beam_z"
+    },
+    "axis_x=true,axis_z=true": {
+      "model": "firmalifehardcore:block/reinforced_oxisol_beam_both"
+    }
+  }
+}

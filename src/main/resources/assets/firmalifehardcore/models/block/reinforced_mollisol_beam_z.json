@@ -1,0 +1,12 @@
+{
+  "parent": "firmalifehardcore:block/reinforced_soil_horizontal",
+  "textures": {
+    "particle": "tfc:block/dirt/mollisol",
+    "top": "tfc:block/dirt/mollisol",
+    "bottom": "tfc:block/dirt/mollisol",
+    "north": "firmalifehardcore:block/reinforced_mollisol_end_horiz",
+    "south": "firmalifehardcore:block/reinforced_mollisol_end_horiz",
+    "east": "firmalifehardcore:block/reinforced_mollisol_side_horiz",
+    "west": "firmalifehardcore:block/reinforced_mollisol_side_horiz"
+  }
+}

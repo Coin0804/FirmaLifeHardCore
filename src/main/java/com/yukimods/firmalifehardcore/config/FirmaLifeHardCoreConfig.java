@@ -23,9 +23,9 @@ public class FirmaLifeHardCoreConfig {
     }
 
     public static class ServerConfig {
-        public final ModConfigSpec.IntValue scanRadius;
+        public final ModConfigSpec.IntValue maxHorizontalSpan;
+        public final ModConfigSpec.IntValue maxVerticalSpan;
         public final ModConfigSpec.IntValue maxSpacesPerTick;
-        public final ModConfigSpec.IntValue maxContainersPerTick;
         public final ModConfigSpec.DoubleValue doubleDoorMultiplier;
 
         public final ModConfigSpec.DoubleValue resistanceHigh;
@@ -45,23 +45,23 @@ public class FirmaLifeHardCoreConfig {
         ServerConfig(ModConfigSpec.Builder builder) {
             builder.comment("FirmaLife HardCore — 地窖热阻系统配置").push("server");
 
-            scanRadius = builder
-                .comment("地窖扫描半径（种子位置向各方向的最大搜索距离，对标 Firmalife 原版 inflatedBy(15)）")
-                .defineInRange("scanRadius", 15, 3, 32);
+            maxHorizontalSpan = builder
+                .comment("地窖最大水平跨度（长/宽方向最大格数）")
+                .defineInRange("maxHorizontalSpan", 15, 3, 64);
+            maxVerticalSpan = builder
+                .comment("地窖最大竖直跨度（高度方向最大格数）")
+                .defineInRange("maxVerticalSpan", 5, 2, 32);
             maxSpacesPerTick = builder
                 .comment("每 tick 最多重检的空间数")
-                .defineInRange("maxSpacesPerTick", 3, 1, 20);
-            maxContainersPerTick = builder
-                .comment("每 tick 最多检查的容器数")
-                .defineInRange("maxContainersPerTick", 5, 1, 50);
+                .defineInRange("maxSpacesPerTick", 20, 1, 1000);
             doubleDoorMultiplier = builder
                 .comment("双门加成倍率")
-                .defineInRange("doubleDoorMultiplier", 1.2, 1.0, 2.0);
+                .defineInRange("doubleDoorMultiplier", 4.0, 1.0, 10.0);
 
             builder.push("resistance");
-            resistanceHigh = builder.defineInRange("high", 0.80, 0.0, 1.0);
+            resistanceHigh = builder.defineInRange("high", 0.75, 0.0, 1.0);
             resistanceMedium = builder.defineInRange("medium", 0.55, 0.0, 1.0);
-            resistanceLow = builder.defineInRange("low", 0.15, 0.0, 1.0);
+            resistanceLow = builder.defineInRange("low", 0.25, 0.0, 1.0);
             builder.pop();
 
             builder.push("preservationTiers");

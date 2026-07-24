@@ -21,7 +21,7 @@ public class CellarDebugInfo {
     public List<ContainerInfo> nearbyContainers = new ArrayList<>();
     public int totalTrackedSpaces;
     public int dirtySpacesQueue;
-    public int dirtyContainersQueue;
+    public int pendingDiscoveriesQueue;
     public long currentTick;
 
     public record ContainerInfo(BlockPos pos, String name, boolean climateValid) {}
@@ -104,7 +104,7 @@ public class CellarDebugInfo {
         sb.append("\n  [Track] 追踪状态:\n");
         sb.append("     已追踪地窖空间数: ").append(totalTrackedSpaces).append("\n");
         sb.append("     待重检空间队列: ").append(dirtySpacesQueue).append("\n");
-        sb.append("     待检容器队列: ").append(dirtyContainersQueue).append("\n");
+        sb.append("     待检容器队列: ").append(pendingDiscoveriesQueue).append("\n");
         if (space != null && space.valid) {
             long ticksAgo = currentTick - space.lastCheckedTick;
             sb.append("     最后检测: tick ").append(space.lastCheckedTick)
