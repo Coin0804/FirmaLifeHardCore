@@ -1,6 +1,6 @@
 {
   "name": "地窖与温室系统",
-  "category": "tfc:firmalife",
+  "category": "tfc:firmalifehardcore",
   "icon": "minecraft:clock",
   "pages": [
     {
@@ -23,5 +23,5 @@
     }
   ],
   "read_by_default": true,
-  "sortnum": 2
+  "sortnum": 1
 }

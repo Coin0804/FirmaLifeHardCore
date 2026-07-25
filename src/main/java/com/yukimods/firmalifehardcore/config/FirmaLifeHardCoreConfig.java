@@ -47,10 +47,10 @@ public class FirmaLifeHardCoreConfig {
 
             maxHorizontalSpan = builder
                 .comment("地窖最大水平跨度（长/宽方向最大格数）")
-                .defineInRange("maxHorizontalSpan", 15, 3, 64);
+                .defineInRange("maxHorizontalSpan", 24, 3, 64);
             maxVerticalSpan = builder
                 .comment("地窖最大竖直跨度（高度方向最大格数）")
-                .defineInRange("maxVerticalSpan", 5, 2, 32);
+                .defineInRange("maxVerticalSpan", 8, 2, 32);
             maxSpacesPerTick = builder
                 .comment("每 tick 最多重检的空间数")
                 .defineInRange("maxSpacesPerTick", 20, 1, 1000);

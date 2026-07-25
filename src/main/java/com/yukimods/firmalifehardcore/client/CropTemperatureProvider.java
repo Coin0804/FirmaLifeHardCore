@@ -72,8 +72,10 @@ public enum CropTemperatureProvider implements IBlockComponentProvider, IServerD
             default -> Component.translatable("jade.firmalifehardcore.crop_temp_valid");
         };
 
-        tooltip.add(Component.translatable("jade.firmalifehardcore.indoor_temperature", tempComp));
-        tooltip.add(suitComp);
+        tooltip.add(Component.translatable("jade.firmalifehardcore.indoor_temperature", tempComp)
+            .append(Component.literal(" "))
+            .append(suitComp));
+        
     }
 
     @Override

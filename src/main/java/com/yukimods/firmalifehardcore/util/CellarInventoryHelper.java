@@ -32,9 +32,9 @@ public final class CellarInventoryHelper {
     public static Holder<FoodTrait> getCellarTrait(Level level, BlockPos pos) {
         if (!(level instanceof ServerLevel sl)) return null;
         CellarTracker tracker = CellarAttachment.get(sl);
-        CellarSpace.CellarResult result = tracker.query(pos);
-        if (result == null || !result.valid()) return null;
-        return traitForTier(tierFromTemperature(result.effectiveTemperature()));
+        CellarSpace space = tracker.query(pos);
+        if (space == null) return null;
+        return traitForTier(tierFromTemperature(space.getEffectiveTemperature(level)));
     }
 
     /** tier → SHELVED trait */

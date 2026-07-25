@@ -1,7 +1,10 @@
 package com.yukimods.firmalifehardcore.util;
 
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
+import net.dries007.tfc.util.calendar.Calendars;
+import net.dries007.tfc.util.climate.Climate;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,9 +29,6 @@ public class CellarSpace {
     /** 平均热阻 (0~1) */
     public float avgResistance;
 
-    /** 地窖有效温度 */
-    public float effectiveTemperature;
-
     /** 棚顶比例 (0~1) */
     public float canopyRatio;
 
@@ -39,6 +39,28 @@ public class CellarSpace {
     public float getBaseTemperature() {
         if (!isGreenhouse()) return 4f;
         return 4f + FirmaLifeHardCoreConfig.SERVER.greenhouseCanopyMultiplier.get().floatValue() * canopyRatio;
+    }
+
+    /**
+     * 室内即时温度：基准 + (室外即时 - 基准) × (1 - 平均热阻)
+     * 走 ClimateModel 实例方法获取室外温度，绕过 ClimateMixin。
+     */
+    public float getEffectiveTemperature(Level level) {
+        var cal = Calendars.get(level);
+        float outdoor = Climate.get(level).getInstantTemperature(
+            level, seedPos, cal.getCalendarTicks(), cal.getCalendarDaysInMonth());
+        float base = getBaseTemperature();
+        return base + (outdoor - base) * (1f - Math.min(1f, avgResistance));
+    }
+
+    /**
+     * 室内平均温度：基准 + (室外年均 - 基准) × (1 - 平均热阻)
+     * 用于替代 Climate.getAverageTemperature()，判断植物气候适宜度。
+     */
+    public float getAverageTemperature(Level level) {
+        float outdoorAvg = Climate.get(level).getAverageTemperature(level, seedPos);
+        float base = getBaseTemperature();
+        return base + (outdoorAvg - base) * (1f - Math.min(1f, avgResistance));
     }
 
     /** 墙体统计 */
@@ -65,13 +87,9 @@ public class CellarSpace {
     public void invalidate() {
         this.valid = false;
         this.avgResistance = 0f;
-        this.effectiveTemperature = 0f;
         this.canopyRatio = 0f;
         this.interiorPositions.clear();
         this.wallPositions.clear();
         this.obstaclePositions.clear();
     }
-
-    /** 检测结果记录 — 不可变 */
-    public record CellarResult(float avgResistance, float effectiveTemperature, boolean valid) {}
 }

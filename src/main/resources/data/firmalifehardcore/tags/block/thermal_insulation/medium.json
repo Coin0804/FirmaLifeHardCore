@@ -2,13 +2,14 @@
   "values": [
     "#c:stones",
     "#c:stones/smooth",
-    "#tfc:rock_blocks",
+    "#c:ores",
     "#tfc:dirt",
     "#tfc:grass",
     "#minecraft:stone_bricks",
     "minecraft:packed_mud",
     "#minecraft:planks",
     "#minecraft:logs",
-    "tfc:wattle"
+    "tfc:wattle",
+    "tfc:thatch"
   ]
 }

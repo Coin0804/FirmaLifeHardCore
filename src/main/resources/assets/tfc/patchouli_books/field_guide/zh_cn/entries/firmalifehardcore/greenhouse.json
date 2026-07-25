@@ -1,6 +1,6 @@
 {
   "name": "温室（新版）",
-  "category": "tfc:firmalife",
+  "category": "tfc:firmalifehardcore",
   "icon": "minecraft:glass",
   "pages": [
     {
@@ -19,5 +19,5 @@
     }
   ],
   "read_by_default": true,
-  "sortnum": 7
+  "sortnum": 2
 }

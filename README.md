@@ -6,152 +6,144 @@
 
 ## English
 
-A NeoForge 1.21.1 patch mod that overhauls Firmalife's cellar (and eventually greenhouse) mechanics with a **Vintage Story-inspired physics simulation**.
+A NeoForge 1.21.1 mod that completely overhauls Firmalife's cellar and greenhouse mechanics — **no Climate Station required**. Enclosed spaces are auto-detected via BFS floodfill with dynamic AABB tracking. Any insulating blocks form a functional cellar or greenhouse.
 
-Instead of the vanilla Firmalife approach — where only 6 sealed brick block types count as cellar insulation and a ClimateStation block is required — this mod introduces a **global, event-driven CellarTracker** attached to every ServerLevel. Any enclosed space built from high-insulation materials (stone, dirt, packed earth, bricks) functions as a cellar. No special blocks needed.
+### Cellar & Greenhouse System
 
-### Cellar Thermal Resistance System
-
-Enclosed spaces are detected via BFS floodfill. Every solid wall block contributes a **thermal resistance value** based on block tags:
+Enclosed spaces are detected automatically when wall/container blocks are placed or broken. Every solid wall block contributes a **thermal resistance value** based on block tags:
 
 | Tier | Resistance | Typical Blocks |
 |------|-----------|----------------|
-| **HIGH** | 0.80 | Stone, dirt, bricks, packed mud, sealed bricks, reinforced soil |
-| **MEDIUM** | 0.55 | Planks, logs, lumber, support beams, wattle |
-| **LOW** | 0.15 | Glass, metal blocks |
+| **HIGH** | 0.75 | Mud bricks, sealed bricks (`#firmalife:cellar_insulation`), reinforced soil |
+| **MEDIUM** | 0.55 | Stone, cobblestone, rock, dirt, grass, stone bricks, planks, logs, wattle |
+| **LOW** | 0.25 | Glass, glass panes, metal blocks, sandstone, support beams |
 
-Doors and trapdoors reduce insulation when open. Double doors grant a 1.2× bonus.
+Doors count as medium resistance. **Double doors** grant a **4× multiplier**.
 
-The effective cellar temperature is calculated as:
+**Cellar** effective temperature: `T_indoor = baseTemp + (T_outdoor − baseTemp) × (1 − avgR)`, where `baseTemp = 4°C`. Lower effective temp → better preservation (SHELVED ≤ 16°C, SHELVED_2 ≤ 8°C, SHELVED_3 ≤ 0°C).
 
-```
-T_cellar = 4 + (T_outside − 4) × (1 − clamp(avgR, 0, 1))
-```
+**Greenhouse** detection: roof blocks with interior (or interior obstacles) below → roof. Glass roof ≥ 50% visible to sky → greenhouse. `baseTemp = 4 + 40 × canopyRatio`.
+
+**Temperature API**: Both `Climate.getInstantTemperature()` and `Climate.getAverageTemperature()` are intercepted. Instant returns the effective temperature (weather-dependent), average returns the indoor annual mean (stable microclimate, used by bushes/fruit trees for climate suitability).
 
 ### Container Preservation
 
-Supported container types:
+| Container | Mechanism |
+|-----------|-----------|
+| Food Shelf | 3-tier SHELVED trait via ClimateReceiver |
+| Hanger | 3-tier HUNG trait via ClimateReceiver |
+| Large Vessel | SHELVED applied on seal, removed on unseal |
 
-| Container | Preservation Mechanism |
-|-----------|----------------------|
-| Food Shelf | ClimateReceiver + 3-tier SHELVED trait |
-| Hanger | ClimateReceiver + 3-tier HUNG trait |
-| Large Vessel | onSeal appends SHELVED / onUnseal removes |
+All container blocks are auto-detected via `#firmalifehardcore:cellar_containers` tag.
+
+### Thermometer Integration
+
+Thermometers display greenhouse/cellar temperature via redstone signal (server-side) and Jade tooltip ("Indoor Temp"). Outdoor thermometers show TFC's native tooltip.
 
 ### Reinforced Soil
 
-8 soil variants × 2 states (normal = vertical anchor, beam = horizontal support). Created by holding a **support beam** (main hand) + **hammer** (offhand), right-clicking reinforceable ground (dirt, grass, farmland, grass path). Sneak+right-click extends downward up to 3.
+8 soil variants × visual states based on `axis_x`/`axis_z` connection properties. Created with **support beam** (main hand) + **hammer** (offhand), right-clicking reinforceable ground. Sneak+right-click extends downward up to 3.
 
-- **Auto-connection**: on placement/conversion, scans E/W and N/S axes (up to 5) for support beam endpoints. Both ends found → becomes `_beam` variant (provides TFC support). Endpoints lost → reverts. Adjacent blocks re-check on state change.
-- **Textures**: normal = beam mark on top/bottom, TFC dirt on sides. Beam = TFC dirt on top/bottom, beam mark on sides.
-- **TFC Integration**: `_beam` variants in `tfc:support` (2/2/4) + `#tfc:support_beams` tag. Normal variants in `#tfc:support_beams` tag only.
-- **Jade**: Optional tooltip shows support status on landslide-prone blocks.
+**Visual system** — 6 texture types per variant:
+- End texture (centered/top-edge beam cross-section)
+- Vertical crack / cross crack / horizontal crack on sides
+- Becomes horizontal beam when both ends connected to support beams
+- Auto-connects/disconnects on neighbor changes
 
 ### Commands
 
 ```
-/firmalifehardcore cellar info     — Show cellar parameters at your position
-/firmalifehardcore cellar recalc   — Force recalculation (admin only)
-/firmalifehardcore cellar list     — List all tracked cellar spaces
+/firmalifehardcore cellar info     — Cellar/greenhouse debug info
+/firmalifehardcore cellar recalc   — Force rescan (permission 4)
+/firmalifehardcore cellar list     — List all tracked spaces
 ```
 
-### Architecture
+### Patchouli
 
-```
-CellarTracker (per ServerLevel, via NeoForge Attachment)
-├── CellarDetector — BFS floodfill + thermal calculation
-├── CellarEventHandler — Block place/break/door toggle → mark dirty
-├── ThermalConductivity — Tag-based 3-tier resistance lookup
-├── ContainerModifiers — Container type → preservation modifier
-└── Tick-limited processing — max 3 spaces + 5 containers per tick
-```
-
-### Dependencies
-
-- **Minecraft** 1.21.1
-- **NeoForge** 21.1+
-- **TerraFirmaCraft** 4.x
-- **Firmalife** 2.x
+Registers a separate **FirmaLife HardCore** category in TFC's field guide (sortnum=11, after Firmalife), with thermometer icon. Covers the cellar/greenhouse overhaul mechanics.
 
 ### Configuration
 
-All values are configurable via `config/firmalifehardcore-server.toml`:
-- `scanRadius`, `minThermalResistance`, resistance values per tier
-- Level 2/3 preservation thresholds
-- Container modifier values
-- Tick processing limits
+`config/firmalifehardcore-server.toml`: `maxHorizontalSpan` (default 24), `maxVerticalSpan` (8), resistance values, preservation tier thresholds, greenhouse canopy multiplier/ratio, double door multiplier, tick limits.
 
 ### Build
 
 ```bash
 ./gradlew build
+# JAR → build/libs/firmalifehardcore-neoforge-0.0.1.jar
 ```
-
-JAR output: `build/libs/firmalifehardcore-neoforge-0.0.1.jar`
 
 ### License
 
-MIT — see [LICENSE](LICENSE)
+MIT
 
 ---
 
 ## 中文
 
-一个 NeoForge 1.21.1 补丁 Mod，用**复古物语式物理模拟**彻底改造 Firmalife 的地窖（以及后续的温室）机制。
+一个 NeoForge 1.21.1 Mod，彻底重写 Firmalife 的地窖和温室机制——**不再需要气候站**。封闭空间通过 BFS floodfill + AABB 动态追踪自动检测，任意保温方块围成的空间即可生效。
 
-原版 Firmalife 仅 6 种密封砖可用作地窖墙体，且必须放置 ClimateStation 气候站。本 Mod 引入了附着于每个 ServerLevel 的**全局事件驱动 CellarTracker**。任何由高保温材料（石头、泥土、砖块、夯实土）封闭的空间自动成为地窖——无需特殊方块。
+### 地窖与温室
 
-### 地窖热阻系统
-
-通过 BFS floodfill 检测封闭空间。每个墙体方块根据 block tag 提供热阻值：
+放置/破坏墙体或容器方块时自动扫描。每个墙体方块根据 block tag 提供热阻值：
 
 | 等级 | 热阻 | 典型方块 |
 |------|------|----------|
-| **HIGH** | 0.80 | 石头、泥土、砖块、夯实泥、密封砖、带支撑土 |
-| **MEDIUM** | 0.55 | 木板、原木、木材、支撑梁、编织墙 |
-| **LOW** | 0.15 | 玻璃、金属方块 |
+| **HIGH** | 0.75 | 泥砖、密封砖 (`#firmalife:cellar_insulation`)、带支撑土 |
+| **MEDIUM** | 0.55 | 石头、圆石、岩块、泥土、草地、石砖、木板、原木、wattle |
+| **LOW** | 0.25 | 玻璃、玻璃板、金属块、砂岩、支撑梁 |
 
-开关门影响保温——开门时该方向热阻归零。双门提供 1.2× 加成。
+门算中等热阻，**双门 4 倍**加成。
 
-地窖有效温度：`T_地窖 = 4 + (T_室外 − 4) × (1 − 平均热阻)`
+**地窖**：T_室内 = 基准 + (T_室外 − 基准) × (1 − 平均热阻)，基准 = 4°C。温度越低保鲜越好（≤16°C SHELVED / ≤8°C SHELVED_2 / ≤0°C SHELVED_3）。
+
+**温室**：屋顶方块下方是室内空间（含障碍物）→ 计入屋顶。玻璃屋顶 ≥ 50% 可见天空 → 温室。基准 = 4 + 40 × 棚顶比例。
+
+**温度 API**：`getInstantTemperature()` 和 `getAverageTemperature()` 均被拦截。即时返回有效温度（随天气波动），年均返回室内基准温度（稳定微气候，供灌木/果树判气候适宜度）。
 
 ### 容器保鲜
 
-已支持的容器类型：
+| 容器 | 机制 |
+|------|------|
+| 食品架 | 三级 SHELVED trait（ClimateReceiver） |
+| 风干架 | 三级 HUNG trait（ClimateReceiver） |
+| 大缸 | 密封时附加 SHELVED，解封时清除 |
 
-| 容器 | 保鲜机制 |
-|------|---------|
-| 食物架 (FoodShelf) | ClimateReceiver + 三级 SHELVED trait |
-| 悬挂架 (Hanger) | ClimateReceiver + 三级 HUNG trait |
-| 大缸 (LargeVessel) | onSeal 追加 SHELVED / onUnseal 清除 |
+通过 `#firmalifehardcore:cellar_containers` tag 自动识别。
 
-### 带支撑的土
+### 温度计
 
-8 种土壤变体 × 2 状态（竖梁锚点 / 横梁支撑）。**主手支撑梁** + **副手锤**，右键地面方块（泥土/草地/耕地/草径）。潜行右键向下延伸最多 3 格。
+红石信号（服务端）+ Jade tooltip（"室内温度"）显示温室/地窖有效温度。户外自动回退 TFC 原生显示。
 
-- **自动连接**：放置/转换时扫描 E/W、N/S 轴（最多 5 格），两端均有端点→变 `_beam` 横梁（提供 TFC 支撑），端点消失→退回。状态变化时邻居重检。
-- **纹理**：竖梁 = 顶底梁标记 + 侧面 TFC 土。横梁 = 顶底 TFC 土 + 侧面梁标记。
-- **TFC 集成**：`_beam` 在 `tfc:support`(2/2/4) + `#tfc:support_beams`。普通变体仅 `#tfc:support_beams`。
-- **Jade**：可选 tooltip，滑坡方块显示支撑状态。
+### 带支撑土
+
+8 种土壤变体，`axis_x`/`axis_z` 属性控制视觉。**主手支撑梁 + 副手锤**右键地面，潜行向下最多 3 格。
+
+6 种纹理：端头（居中/贴边）、纵裂纹、纵横裂纹、横裂纹。两端连接支撑梁自动变横梁，断开自动恢复。
 
 ### 指令
 
 ```
-/firmalifehardcore cellar info     — 查看当前位置地窖参数
-/firmalifehardcore cellar recalc   — 强制重算（管理员）
+/firmalifehardcore cellar info     — 地窖/温室诊断信息
+/firmalifehardcore cellar recalc   — 强制重算（4 级权限）
 /firmalifehardcore cellar list     — 列出所有已追踪空间
 ```
 
-### 依赖
+### 帕秋莉
 
-- Minecraft 1.21.1 / NeoForge 21.1+ / TFC 4.x / Firmalife 2.x
+在 TFC 手册中注册独立 **FirmaLife HardCore** 分类（sortnum=11，排在 Firmalife 之后），温度计图标，介绍新版地窖/温室机制。
+
+### 配置
+
+`config/firmalifehardcore-server.toml`：`maxHorizontalSpan`（默认 24）、`maxVerticalSpan`（8）、热阻值、保鲜温度阈值、温室棚顶参数、双门倍率、tick 处理上限。
 
 ### 构建
 
 ```bash
 ./gradlew build
+# JAR → build/libs/firmalifehardcore-neoforge-0.0.1.jar
 ```
 
 ### 许可证
 
-MIT 协议 — 详见 [LICENSE](LICENSE)
+MIT

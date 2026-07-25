@@ -158,16 +158,16 @@ public class CellarTracker {
 
     // ===== 查询 =====
 
-    /** 查询位置是否在地窖中（含内部障碍物位置如食物架） */
+    /** 查询位置是否在地窖中（含内部障碍物位置如食物架）。返回 CellarSpace 或 null。 */
     @Nullable
-    public CellarSpace.CellarResult query(BlockPos pos) {
+    public CellarSpace query(BlockPos pos) {
         CellarSpace space = spacesByPos.get(pos);
         if (space == null) {
             for (CellarSpace s : allSpaces)
                 if (s.valid && s.obstaclePositions.contains(pos)) { space = s; break; }
         }
         if (space != null && space.valid) {
-            return new CellarSpace.CellarResult(space.avgResistance, space.effectiveTemperature, true);
+            return space;
         }
         return null;
     }
@@ -182,6 +182,9 @@ public class CellarTracker {
         ICalendar cal = Calendars.get(level);
         info.outdoorTemp = Climate.get(level).getInstantTemperature(
             level, pos, cal.getCalendarTicks(), cal.getCalendarDaysInMonth());
+        if (info.space != null && info.space.valid) {
+            info.indoorTemp = info.space.getEffectiveTemperature(level);
+        }
         info.totalTrackedSpaces = allSpaces.size();
         info.dirtySpacesQueue = dirtySpaces.size();
         info.pendingDiscoveriesQueue = pendingDiscoveries.size();
@@ -208,7 +211,7 @@ public class CellarTracker {
                         else name = state.getBlock().getName().getString();
 
                         var r = query(near);
-                        boolean climateValid = r != null && r.valid();
+                        boolean climateValid = r != null;
                         info.nearbyContainers.add(new CellarDebugInfo.ContainerInfo(near.immutable(), name, climateValid));
                     }
                 }
@@ -229,7 +232,6 @@ public class CellarTracker {
                 .append(" valid=").append(space.valid)
                 .append(" avgR=").append(String.format("%.2f", space.avgResistance))
                 .append(" canopy=").append(String.format("%.0f%%", space.canopyRatio * 100))
-                .append(" T=").append(String.format("%.1f", space.effectiveTemperature)).append("°C")
                 .append(" base=").append(String.format("%.1f", space.getBaseTemperature())).append("°C")
                 .append(" interior=").append(space.interiorPositions.size())
                 .append(" walls=").append(space.wallPositions.size())
@@ -295,7 +297,7 @@ public class CellarTracker {
 
     /** 广播给空间内所有 ClimateReceiver（含内部障碍物位置中的容器） */
     private void broadcastToContainers(ServerLevel level, CellarSpace space) {
-        int tier = CellarInventoryHelper.tierFromTemperature(space.effectiveTemperature);
+        int tier = CellarInventoryHelper.tierFromTemperature(space.getEffectiveTemperature(level));
         boolean effective = space.valid && tier > 0; // tier=0 视为无效地窖
         // 地窖总是通知，温室额外通知一次，温室使用最高等级
         for (BlockPos ip : space.interiorPositions){

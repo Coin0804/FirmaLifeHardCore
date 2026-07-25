@@ -2,6 +2,7 @@
   "values": [
     "#c:glass_blocks",
     "#c:glass_panes",
-    "#c:storage_blocks"
+    "#c:storage_blocks",
+    "#c:sandstone/blocks"
   ]
 }

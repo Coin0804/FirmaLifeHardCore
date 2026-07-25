@@ -2,9 +2,6 @@ package com.yukimods.firmalifehardcore.util;
 
 import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
-import net.dries007.tfc.util.calendar.Calendars;
-import net.dries007.tfc.util.calendar.ICalendar;
-import net.dries007.tfc.util.climate.Climate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
@@ -161,8 +158,10 @@ public final class CellarDetector {
         for (BlockPos wallPos : space.wallPositions) {
             BlockState wallState = level.getBlockState(wallPos);
 
-            // 棚顶判定：墙块下方紧邻内部空间 → 这是屋顶
-            boolean isRoof = space.interiorPositions.contains(wallPos.below());
+            // 棚顶判定：墙块下方紧邻内部空间或内部障碍物 → 这是屋顶
+            BlockPos below = wallPos.below();
+            boolean isRoof = space.interiorPositions.contains(below)
+                || space.obstaclePositions.contains(below);
             if (isRoof) {
                 totalRoof++;
                 // 棚顶需要玻璃且能看到天空才计入
@@ -211,22 +210,13 @@ public final class CellarDetector {
 
         space.canopyRatio = totalRoof > 0 ? (float) canopyRoof / totalRoof : 0f;
 
-        // 直接调 ClimateModel.getInstantTemperature 获取真实室外即时温度，绕过 ClimateMixin
-        ICalendar cal = Calendars.get(level);
-        float outdoor = Climate.get(level).getInstantTemperature(
-            level, space.seedPos, cal.getCalendarTicks(), cal.getCalendarDaysInMonth());
-        space.effectiveTemperature = space.getBaseTemperature()
-            + (outdoor - space.getBaseTemperature()) * (1f - Math.min(1f, space.avgResistance));
-
         // 诊断日志：空间分类及关键参数
-        FirmaLifeHardCore.LOGGER.debug("[CellarDetector] seed={} type={} avgR={} canopy={}% baseT={} outdoor={} effective={} walls={}",
+        FirmaLifeHardCore.LOGGER.debug("[CellarDetector] seed={} type={} avgR={} canopy={}% baseT={} walls={}",
             space.seedPos.toShortString(),
             space.isGreenhouse() ? "GREENHOUSE" : "CELLAR",
             String.format("%.2f", space.avgResistance),
             String.format("%.0f", space.canopyRatio * 100f),
             String.format("%.1f", space.getBaseTemperature()),
-            String.format("%.1f", outdoor),
-            String.format("%.1f", space.effectiveTemperature),
             space.wallPositions.size()
         );
     }

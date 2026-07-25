@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * 拦截 TFC Climate.getInstantTemperature() 全部 4 个重载，
+ * 拦截 TFC Climate.getInstantTemperature() 全部 4 个重载及 getAverageTemperature()，
  * 对地窖/温室坐标返回计算温度。使用全限定 JVM 描述符精确区分重载。
  */
 @Mixin(value = Climate.class, remap = false)
@@ -27,7 +27,7 @@ public class ClimateMixin {
     private static void onGetInstant_4pr(Level level, BlockPos pos,
         long calendarTick, int daysInMonth, CallbackInfoReturnable<Float> cir)
     {
-        intercept(level, pos, cir);
+        interceptInstant(level, pos, cir);
     }
 
     /* (Level,BlockPos,ICalendar,long) → JVM: (Lnet/...Level;Lnet/...BlockPos;Lnet/...ICalendar;J)F */
@@ -37,7 +37,7 @@ public class ClimateMixin {
     private static void onGetInstant_4ICal(Level level, BlockPos pos,
         ICalendar calendar, long calendarTick, CallbackInfoReturnable<Float> cir)
     {
-        intercept(level, pos, cir);
+        interceptInstant(level, pos, cir);
     }
 
     /* (Level,BlockPos,ICalendar) → JVM: (Lnet/...Level;Lnet/...BlockPos;Lnet/...ICalendar;)F */
@@ -47,7 +47,7 @@ public class ClimateMixin {
     private static void onGetInstant_3pr(Level level, BlockPos pos,
         ICalendar calendar, CallbackInfoReturnable<Float> cir)
     {
-        intercept(level, pos, cir);
+        interceptInstant(level, pos, cir);
     }
 
     /* (Level,BlockPos) → JVM: (Lnet/...Level;Lnet/...BlockPos;)F */
@@ -57,16 +57,32 @@ public class ClimateMixin {
     private static void onGetInstant_2pr(Level level, BlockPos pos,
         CallbackInfoReturnable<Float> cir)
     {
-        intercept(level, pos, cir);
+        interceptInstant(level, pos, cir);
     }
 
-    private static void intercept(Level level, BlockPos pos, CallbackInfoReturnable<Float> cir) {
+    /* getAverageTemperature(Level,BlockPos) */
+    @Inject(method = "getAverageTemperature(Lnet/minecraft/world/level/Level;"
+        + "Lnet/minecraft/core/BlockPos;)F",
+        at = @At("HEAD"), cancellable = true, remap = false)
+    private static void onGetAverage(Level level, BlockPos pos,
+        CallbackInfoReturnable<Float> cir)
+    {
         if (!(level instanceof ServerLevel sl)) return;
 
         CellarTracker tracker = CellarAttachment.get(sl);
-        CellarSpace.CellarResult result = tracker.query(pos);
-        if (result != null && result.valid()) {
-            cir.setReturnValue(result.effectiveTemperature());
+        CellarSpace space = tracker.query(pos);
+        if (space != null) {
+            cir.setReturnValue(space.getAverageTemperature(level));
+        }
+    }
+
+    private static void interceptInstant(Level level, BlockPos pos, CallbackInfoReturnable<Float> cir) {
+        if (!(level instanceof ServerLevel sl)) return;
+
+        CellarTracker tracker = CellarAttachment.get(sl);
+        CellarSpace space = tracker.query(pos);
+        if (space != null) {
+            cir.setReturnValue(space.getEffectiveTemperature(level));
         }
     }
 }
