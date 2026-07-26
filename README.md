@@ -70,7 +70,7 @@ Registers a separate **FirmaLife HardCore** category in TFC's field guide (sortn
 
 ```bash
 ./gradlew build
-# JAR → build/libs/firmalifehardcore-neoforge-0.0.1.jar
+# JAR → build/libs/firmalifehardcore-neoforge-0.1.0-beta.jar
 ```
 
 ### License
@@ -141,7 +141,7 @@ MIT
 
 ```bash
 ./gradlew build
-# JAR → build/libs/firmalifehardcore-neoforge-0.0.1.jar
+# JAR → build/libs/firmalifehardcore-neoforge-0.1.0-beta.jar
 ```
 
 ### 许可证

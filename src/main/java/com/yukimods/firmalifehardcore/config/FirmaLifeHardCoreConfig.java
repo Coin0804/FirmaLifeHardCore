@@ -43,19 +43,19 @@ public class FirmaLifeHardCoreConfig {
         public final ModConfigSpec.IntValue hammerDurabilityCost;
 
         ServerConfig(ModConfigSpec.Builder builder) {
-            builder.comment("FirmaLife HardCore — 地窖热阻系统配置").push("server");
+            builder.comment("FirmaLife HardCore — Cellar & Greenhouse Thermal System").push("server");
 
             maxHorizontalSpan = builder
-                .comment("地窖最大水平跨度（长/宽方向最大格数）")
+                .comment("Maximum horizontal span (blocks) for cellar/greenhouse detection")
                 .defineInRange("maxHorizontalSpan", 24, 3, 64);
             maxVerticalSpan = builder
-                .comment("地窖最大竖直跨度（高度方向最大格数）")
+                .comment("Maximum vertical span (blocks) for cellar/greenhouse detection")
                 .defineInRange("maxVerticalSpan", 8, 2, 32);
             maxSpacesPerTick = builder
-                .comment("每 tick 最多重检的空间数")
+                .comment("Maximum spaces to recheck per tick")
                 .defineInRange("maxSpacesPerTick", 20, 1, 1000);
             doubleDoorMultiplier = builder
-                .comment("双门加成倍率")
+                .comment("Multiplier applied to double doors for thermal resistance")
                 .defineInRange("doubleDoorMultiplier", 4.0, 1.0, 10.0);
 
             builder.push("resistance");
@@ -66,31 +66,31 @@ public class FirmaLifeHardCoreConfig {
 
             builder.push("preservationTiers");
             tier1Temperature = builder
-                .comment("一级保鲜温度阈值（≤此值 = SHELVED），高于此值 = 无效地窖")
+                .comment("Tier 1 preservation threshold (≤ this = SHELVED). Above = no preservation")
                 .defineInRange("tier1", 16.0, -50.0, 50.0);
             tier2Temperature = builder
-                .comment("二级保鲜温度阈值（≤此值 = SHELVED_2）")
+                .comment("Tier 2 preservation threshold (≤ this = SHELVED_2)")
                 .defineInRange("tier2", 8.0, -50.0, 50.0);
             tier3Temperature = builder
-                .comment("三级保鲜温度阈值（≤此值 = SHELVED_3）")
+                .comment("Tier 3 preservation threshold (≤ this = SHELVED_3)")
                 .defineInRange("tier3", 0.0, -50.0, 50.0);
             builder.pop();
 
             builder.push("greenhouse");
             greenhouseCanopyMultiplier = builder
-                .comment("温室棚顶温度乘数，基准温度 = 4 + 此值 × 棚顶比例，默认 40 表示 100% 棚顶时基准 44°C")
+                .comment("Greenhouse canopy temperature multiplier. Base temp = 4 + this × canopyRatio (default 40 → 44°C at 100% canopy)")
                 .defineInRange("canopyMultiplier", 40.0, 0.0, 100.0);
             greenhouseGlassRatio = builder
-                .comment("温室判定所需的最小棚顶比例（玻璃屋顶 / 总屋顶）")
+                .comment("Minimum glass roof ratio required for greenhouse detection (glass_roof / total_roof)")
                 .defineInRange("glassRatio", 0.5, 0.0, 1.0);
             builder.pop();
 
             builder.push("reinforcedSoil");
             reinforcedSoilMaxDepth = builder
-                .comment("带支撑土向下使用时最大深度")
+                .comment("Maximum depth for reinforced soil downward placement")
                 .defineInRange("maxDepth", 3, 1, 10);
             hammerDurabilityCost = builder
-                .comment("锤每次使用消耗耐久")
+                .comment("Hammer durability cost per use on reinforced soil")
                 .defineInRange("hammerDurabilityCost", 1, 1, 50);
             builder.pop();
 
