@@ -3,10 +3,13 @@
     "package": "com.yukimods.firmalifehardcore.mixin",
     "compatibilityLevel": "JAVA_21",
     "mixins": [
+        "AbstractSprinklerBlockMixin",
         "ClimateMixin",
         "FoodShelfBlockEntityMixin",
         "HangerBlockEntityMixin",
         "LargeVesselBlockEntityMixin",
+        "PumpingStationBlockEntityMixin",
+        "SprinklerBlockEntityMixin",
         "ThermometerMixin"
     ],
     "client": [],

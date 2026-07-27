@@ -40,6 +40,25 @@ All container blocks are auto-detected via `#firmalifehardcore:cellar_containers
 
 Thermometers display greenhouse/cellar temperature via redstone signal (server-side) and Jade tooltip ("Indoor Temp"). Outdoor thermometers show TFC's native tooltip.
 
+### Irrigation System Overhaul (Phase 2)
+
+The Firmalife irrigation system (Pumping Station, Irrigation Tank, Sprinklers) has been upgraded with real fluid mechanics.
+
+**Pumping Station** — Now a NeoForge IFluidHandler container:
+- Base 500mB storage, +500mB per Irrigation Tank stacked directly above (max 3)
+- Draws water from below the pump; fill rate proportional to mechanical rotation speed
+- Fluid capacity auto-synced via NeoForge capabilities; compatible with external fluid pipes
+- Per-tick fill staggered by Z-coordinate (every 20 ticks, ×20 multiplier to avoid truncation)
+
+**Sprinklers** — Real water consumption:
+- Consume 5mB per spray cycle (~80 ticks). 15 RPM pump sustains ~5 sprinklers
+- **Pump Pressure** formula: `PumpY + Tanks + RPM − SprinklerY ≥ 0` — gravity + tank head + rotation determines reach
+- Tank count is event-driven (cached, invalidated on tank place/break); 100-tick fallback rescan
+
+**Irrigation Tank** — Added to LOW thermal insulation tag. Tank in wall acts as pipe passthrough; BFS traverses tanks as pipe nodes.
+
+**Jade** — Sprinklers show greenhouse/cellar status via custom Jade provider. Pump fluid level shown via NeoForge's native fluid tooltip.
+
 ### Reinforced Soil
 
 8 soil variants × visual states based on `axis_x`/`axis_z` connection properties. Created with **support beam** (main hand) + **hammer** (offhand), right-clicking reinforceable ground. Sneak+right-click extends downward up to 3.
@@ -114,6 +133,25 @@ MIT
 ### 温度计
 
 红石信号（服务端）+ Jade tooltip（"室内温度"）显示温室/地窖有效温度。户外自动回退 TFC 原生显示。
+
+### 灌溉系统改造（Phase 2）
+
+全面升级 Firmalife 灌溉系统（水泵站、灌溉水箱、洒水器），引入真实流体机制。
+
+**水泵站** — 现在是 NeoForge IFluidHandler 流体容器：
+- 基础 500mB 储水，正上方每堆叠一个灌溉水箱 +500mB（最多 3 个）
+- 从下方水源取水，储水速率与机械转速成正比
+- 通过 NeoForge 能力系统注册，兼容外部流体管道
+- 每 tick 填充按 Z 坐标错峰（每 20 tick 一次，×20 避免截断）
+
+**洒水器** — 真实水消耗：
+- 每次喷水消耗 5mB（~80 tick），15 RPM 水泵可维持约 5 个洒水器
+- **泵压**公式：`水泵Y + 水箱数 + RPM − 洒水器Y ≥ 0`——重力+水箱+转速决定水能送到的高度
+- 水箱计数事件驱动（缓存，水箱放置/破坏时刷新；100 tick 保底重扫）
+
+**灌溉水箱** — 加入 LOW 热阻标签。墙内水箱充当管道穿墙接口；BFS 将水箱视为管道节点穿越。
+
+**Jade** — 洒水器显示温室/地窖状态（自定义 Jade 提供者）。水泵水位由 NeoForge 原生流体 tooltip 显示。
 
 ### 带支撑土
 

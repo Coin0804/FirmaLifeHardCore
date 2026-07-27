@@ -13,5 +13,6 @@
   "jade.firmalifehardcore.crop_temp_low": "§b[过低]",
   "jade.firmalifehardcore.crop_temp_high": "§6[过高]",
   "jade.firmalifehardcore.crop_temp_valid": "§a[适宜]",
-  "jade.firmalifehardcore.indoor_temperature": "§e室内温度:§r %s"
+  "jade.firmalifehardcore.indoor_temperature": "§e室内温度:§r %s",
+  "jade.firmalifehardcore.pump_head": "§9泵水高度:§r %s"
 }

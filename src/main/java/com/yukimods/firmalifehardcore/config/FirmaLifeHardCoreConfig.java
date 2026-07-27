@@ -42,6 +42,13 @@ public class FirmaLifeHardCoreConfig {
         public final ModConfigSpec.IntValue reinforcedSoilMaxDepth;
         public final ModConfigSpec.IntValue hammerDurabilityCost;
 
+        public final ModConfigSpec.IntValue pumpBaseCapacity;
+        public final ModConfigSpec.IntValue tankCapacityBonus;
+        public final ModConfigSpec.IntValue maxTankBonus;
+        public final ModConfigSpec.IntValue sprinklerWaterUse;
+        public final ModConfigSpec.DoubleValue pumpRateFactor;
+        public final ModConfigSpec.IntValue pipeMaxCost;
+
         ServerConfig(ModConfigSpec.Builder builder) {
             builder.comment("FirmaLife HardCore — Cellar & Greenhouse Thermal System").push("server");
 
@@ -92,6 +99,27 @@ public class FirmaLifeHardCoreConfig {
             hammerDurabilityCost = builder
                 .comment("Hammer durability cost per use on reinforced soil")
                 .defineInRange("hammerDurabilityCost", 1, 1, 50);
+            builder.pop();
+
+            builder.push("irrigation");
+            pumpBaseCapacity = builder
+                .comment("Pumping station base water capacity (mB)")
+                .defineInRange("pumpBaseCapacity", 500, 100, 10000);
+            tankCapacityBonus = builder
+                .comment("Extra capacity per irrigation tank stacked above the pump (mB)")
+                .defineInRange("tankCapacityBonus", 500, 100, 5000);
+            maxTankBonus = builder
+                .comment("Maximum number of tanks above the pump that count for capacity boost")
+                .defineInRange("maxTankBonus", 3, 0, 10);
+            sprinklerWaterUse = builder
+                .comment("Water consumed by a sprinkler per cycle (mB per ~80 ticks)")
+                .defineInRange("sprinklerWaterUse", 5, 1, 100);
+            pumpRateFactor = builder
+                .comment("Multiplier for rotation speed → water fill rate. 15 RPM with factor 4.0 ≈ 25 mB/80tick")
+                .defineInRange("pumpRateFactor", 4.0, 0.1, 100.0);
+            pipeMaxCost = builder
+                .comment("Maximum BFS search distance for sprinkler pipe network (was 32)")
+                .defineInRange("pipeMaxCost", 64, 16, 256);
             builder.pop();
 
             builder.pop();

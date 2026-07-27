@@ -1,8 +1,9 @@
 package com.yukimods.firmalifehardcore.event;
 
-import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
+import com.eerussianguy.firmalife.common.blocks.FLBlocks;
 import com.yukimods.firmalifehardcore.attachment.CellarAttachment;
 import com.yukimods.firmalifehardcore.util.CellarSavedData;
+import com.yukimods.firmalifehardcore.util.PumpTickManager;
 import com.yukimods.firmalifehardcore.util.CellarTracker;
 import com.yukimods.firmalifehardcore.util.ThermalConductivity;
 import net.minecraft.core.BlockPos;
@@ -55,21 +56,23 @@ public class CellarEventHandler {
     @SubscribeEvent
     public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         BlockState state = event.getPlacedBlock();
-        FirmaLifeHardCore.LOGGER.debug("[EventHandler] PLACE pos={} block={} relevant={}",
-            event.getPos().toShortString(), state.getBlock().getDescriptionId(), isRelevantBlock(state));
+        if (isIrrigationTank(state)) PumpTickManager.notifyBlockChanged(event.getLevel(), event.getPos());
         if (isRelevantBlock(state)) trigger(event.getLevel(), event.getPos(), state, "PLACE");
     }
 
     @SubscribeEvent
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
         BlockState oldState = event.getState();
-        FirmaLifeHardCore.LOGGER.debug("[EventHandler] BREAK pos={} block={} relevant={}",
-            event.getPos().toShortString(), oldState.getBlock().getDescriptionId(), isRelevantBlock(oldState));
+        if (isIrrigationTank(oldState)) PumpTickManager.notifyBlockChanged(event.getLevel(), event.getPos());
         if (!isRelevantBlock(oldState)) return;
         if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
 
         CellarTracker tracker = CellarAttachment.get(serverLevel);
         if (tracker != null) tracker.scheduleBreak(event.getPos().immutable());
+    }
+
+    private static boolean isIrrigationTank(BlockState state) {
+        return state.getBlock() == FLBlocks.IRRIGATION_TANK.get();
     }
 
     private static boolean isRelevantBlock(BlockState state) {
@@ -85,8 +88,6 @@ public class CellarEventHandler {
         CellarTracker tracker = CellarAttachment.get(serverLevel);
         if (tracker == null) return;
 
-        FirmaLifeHardCore.LOGGER.debug("[EventHandler] trigger {} pos={} trackerSpaces={}",
-            action, pos.toShortString(), tracker.spaceCount());
         tracker.markDirty(pos);
     }
 }

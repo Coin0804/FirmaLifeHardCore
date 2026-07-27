@@ -1,6 +1,5 @@
 package com.yukimods.firmalifehardcore.util;
 
-import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -210,14 +209,5 @@ public final class CellarDetector {
 
         space.canopyRatio = totalRoof > 0 ? (float) canopyRoof / totalRoof : 0f;
 
-        // 诊断日志：空间分类及关键参数
-        FirmaLifeHardCore.LOGGER.debug("[CellarDetector] seed={} type={} avgR={} canopy={}% baseT={} walls={}",
-            space.seedPos.toShortString(),
-            space.isGreenhouse() ? "GREENHOUSE" : "CELLAR",
-            String.format("%.2f", space.avgResistance),
-            String.format("%.0f", space.canopyRatio * 100f),
-            String.format("%.1f", space.getBaseTemperature()),
-            space.wallPositions.size()
-        );
     }
 }

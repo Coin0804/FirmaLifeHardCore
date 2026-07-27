@@ -1,5 +1,7 @@
 package com.yukimods.firmalifehardcore.client;
 
+import com.eerussianguy.firmalife.common.blocks.greenhouse.AbstractSprinklerBlock;
+import com.eerussianguy.firmalife.common.blocks.greenhouse.PumpingStationBlock;
 import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import net.dries007.tfc.common.blocks.crop.CropBlock;
 import net.dries007.tfc.common.blocks.devices.ThermometerBlock;
@@ -20,6 +22,8 @@ public class JadePlugin implements IWailaPlugin {
     public void register(IWailaCommonRegistration registration) {
         registration.registerBlockDataProvider(CropTemperatureProvider.INSTANCE, CropBlock.class);
         registration.registerBlockDataProvider(ThermometerTemperatureProvider.INSTANCE, ThermometerBlock.class);
+        registration.registerBlockDataProvider(SprinklerProvider.INSTANCE, AbstractSprinklerBlock.class);
+        registration.registerBlockDataProvider(PumpProvider.INSTANCE, PumpingStationBlock.class);
     }
 
     @Override
@@ -33,6 +37,12 @@ public class JadePlugin implements IWailaPlugin {
         );
         registration.registerBlockComponent(
             ThermometerTemperatureProvider.INSTANCE, ThermometerBlock.class
+        );
+        registration.registerBlockComponent(
+            SprinklerProvider.INSTANCE, AbstractSprinklerBlock.class
+        );
+        registration.registerBlockComponent(
+            PumpProvider.INSTANCE, PumpingStationBlock.class
         );
     }
 }

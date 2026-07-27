@@ -1,0 +1,23 @@
+{
+  "name": "Irrigation Overhaul",
+  "category": "tfc:firmalifehardcore",
+  "icon": "firmalife:irrigation_tank",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "FirmaLife HardCore overhauls the irrigation system (Pumping Station, Irrigation Tank, Sprinklers).$(br2)The $(thing)Pumping Station$() is now a real fluid container — base $(thing)500mB$() storage, plus $(thing)500mB$() per Irrigation Tank stacked directly above (max $(thing)3$()). Fill rate is proportional to $(l)mechanical rotation speed$().$(br2)It connects to fluid pipes from other mods via NeoForge capabilities."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Pump Pressure",
+      "text": "Sprinklers no longer have infinite water — each spray consumes $(thing)5mB$() from storage.$(br2)Water delivery depends on $(thing)Pump Pressure$():$(br)Pressure = PumpY + Tanks + RPM − SprinklerY$(br2)Pressure ≥ 0 means the sprinkler can operate.$(br2)Without mechanical power, the pump can still supply water using gravity head and tank buffer."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Tanks & Wall Passthrough",
+      "text": "$(thing)Irrigation Tanks$() are added to the LOW thermal insulation tag, allowing them to function as greenhouse walls.$(br2)Pipes connected to a tank embedded in a wall do not break the greenhouse seal — the tank acts as a wall passthrough port.$(br2)Tanks above the pump increase storage capacity; tanks in the pipe network serve as routing nodes for sprinkler BFS."
+    }
+  ],
+  "read_by_default": true,
+  "sortnum": 3
+}

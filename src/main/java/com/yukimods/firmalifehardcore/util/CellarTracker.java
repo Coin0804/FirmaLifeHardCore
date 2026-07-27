@@ -2,7 +2,6 @@ package com.yukimods.firmalifehardcore.util;
 
 import com.eerussianguy.firmalife.common.blockentities.ClimateReceiver;
 import com.eerussianguy.firmalife.common.blockentities.ClimateType;
-import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -132,8 +131,6 @@ public class CellarTracker {
         // 标记变更位置本身（作为潜在新空间种子）
         pendingDiscoveries.add(changedPos.immutable());
 
-        FirmaLifeHardCore.LOGGER.debug("[CellarTracker] markDirty pos={} maxHorizSpan={} allSpaces={} nearSpaces={}",
-            changedPos.toShortString(), maxHorizSpan, allSpaces.size(), nearCount);
     }
 
     /** 强制重算（调试指令用） */
@@ -263,6 +260,15 @@ public class CellarTracker {
             allSpaces.remove(m);
         }
         insertSpace(newSpace);
+        // 拆分检测：旧空间有但新空间没有的 interior → 拆墙后另一半，取一个种子加入待发现
+        if (merged.isEmpty()) {
+            for (BlockPos oldIp : oldSpace.interiorPositions) {
+                if (!newSpace.interiorPositions.contains(oldIp)) {
+                    pendingDiscoveries.add(oldIp);
+                    break;
+                }
+            }
+        }
         broadcastToContainers(level, newSpace);
     }
 

@@ -1,0 +1,23 @@
+{
+  "name": "灌溉系统改造",
+  "category": "tfc:firmalifehardcore",
+  "icon": "firmalife:irrigation_tank",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "FirmaLife HardCore 对灌溉系统（水泵站、水箱、洒水器）进行了全面改造。$(br2)$(thing)水泵站$()现在是真正的流体容器——拥有 $(thing)500mB$() 基础储水，正上方每放置一个灌溉水箱增加 $(thing)500mB$() 容量（最多 $(thing)3$() 个）。储水速率与$(l)机械转速$()成正比。$(br2)可通过管道与其他模组的流体系统连接。"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "泵压机制",
+      "text": "洒水器不再无限取水——每次喷水消耗 $(thing)5mB$() 储水。$(br2)水能否到达洒水器由$(thing)泵压$()决定：$(br)泵压 = 水泵Y + 水箱数 + RPM - 洒水器Y$(br2)泵压 ≥ 0 即可工作。$(br2)未连接机械动力时，水泵依靠高度差和水箱缓存仍然能供水（重力水头）。"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "水箱与穿墙",
+      "text": "$(thing)灌溉水箱$()被纳入 LOW 热阻标签，可以作为温室墙壁使用。$(br2)管道连接到嵌入墙体的水箱不会破坏温室密封——水箱充当穿墙接口。$(br2)水泵上方的水箱直接增加泵容量；管道网络中的独立水箱作为管道节点，供洒水器 BFS 穿透搜索。"
+    }
+  ],
+  "read_by_default": true,
+  "sortnum": 3
+}

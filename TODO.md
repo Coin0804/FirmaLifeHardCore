@@ -1,5 +1,25 @@
 # TODO — FirmaLife HardCore
 
+## 已完成 (2026-07-27) — 灌溉系统 Phase 1 + 2
+
+### Phase 1 Hotfix
+- [x] 灌溉水箱加入 LOW 热阻标签 — 水箱作为墙壁，管道穿墙不破坏温室密封
+- [x] 洒水器 BFS 穿透水箱 — `isPipe`/`isPipeInDirection` Mixin redirect
+- [x] 洒水器 Jade tooltip — 禁用原版 HoeOverlay，SprinklerProvider 从 CellarTracker 查询
+- [x] 温室拆分检测 — replaceSpace 遗弃位置加入 pendingDiscoveries
+
+### Phase 2 灌溉流体化
+- [x] 水泵 FluidTank + IFluidHandler — 动态容量（500 + 上方水箱×500，≤3）
+- [x] 每 tick 注水 — PumpTickManager + LevelTickEvent，按 Z 错峰每 20 tick ×20
+- [x] 洒水器真实消耗 — 5mB/80tick，泵压公式（pumpY + tanks + RPM − sprinklerY）
+- [x] 水箱事件驱动扫描 — 放置/破坏水箱时 invalidate 缓存，100 tick 保底重扫
+- [x] 持久化 — Mixin override saveAdditional/loadAdditional
+- [x] NeoForge 能力注册 — RegisterCapabilitiesEvent 暴露 IFluidHandler
+- [x] 诊断日志全部清理
+- [x] 帕秋莉手册 + README 更新
+
+---
+
 ## 已完成 (2026-07-26)
 
 ### 温度系统重做
@@ -12,51 +32,16 @@
 - [x] `maxHorizontalSpan` 15→24, `maxVerticalSpan` 5→8
 
 ### 修复
-- [x] 屋顶检测 — `isRoof` 加入 `obstaclePositions` 判定（屋顶下有食品架也能识别）
+- [x] 屋顶检测 — `isRoof` 加入 `obstaclePositions` 判定
 - [x] Tag 崩溃 — `medium.json` 5 个虚假标签引用 → `#c:ores` + `tfc:thatch`
 - [x] i18n 跨命名空间 — `assets/firmalife/lang/` 覆盖 4 个种植盆 Jade 键
 - [x] CropTemperatureProvider — tooltip 合并为一行
 
 ### 帕秋莉手册迁移
 - [x] 从覆盖 Firmalife 条目改为注册独立 `firmalifehardcore` 分类
-- [x] 温度计图标 + zh_cn 名称"群峦生活硬核版"
 
 ### 研究
-- [x] 63 个 Plantable 分类：29 TFC 作物 + 20 果树灌木 + 14 Firmalife 独有
-- [x] TFC 灌木/果树 vs 种植盆生长机制分析
-
----
-
-## 已完成 (2026-07-25)
-
-### 地窖系统
-- [x] CellarDetector — BFS floodfill + AABB 动态追踪 + 每步 OOB + OBSTACLE 防泄漏
-- [x] CellarTracker — 事件驱动 + tick 限量处理 + 健康检查 + 持久化 + 规范种子
-- [x] 保鲜等级 — 温度 tier（≤0/≤8/≤16°C → SHELVED_3/2/1）
-- [x] 容器保鲜 — FoodShelf/Hanger/LargeVessel Mixin
-- [x] Seed-Independent 检测 — 移除 BoundingBox/maxSize
-
-### 热阻系统
-- [x] 三级热阻 tag（HIGH 0.75 / MEDIUM 0.55 / LOW 0.25）
-- [x] 双门 4× 倍率
-- [x] `#firmalifehardcore:cellar_containers` tag
-
-### 温室系统
-- [x] 棚顶检测 — 屋顶 + greenhouse_roof tag + canSeeSky → canopyRatio
-- [x] ClimateMixin — getInstantTemperature 4 重载拦截
-- [x] 种植盆通知 — GREENHOUSE + Integer.MAX_VALUE tier
-
-### 温度计
-- [x] ThermometerMixin + ThermometerTemperatureProvider + CropTemperatureProvider
-
-### 带支撑土视觉
-- [x] 6 种纹理 × 8 变体 + axis_x/axis_z 属性 + 破坏粒子修复
-
-### 配方
-- [x] 禁用气候站和温室结构方块配方
-
-### Bug 修复
-- [x] Food shelf 放置不触发检测 / 温度计不读温室温度 / BFS 岩石泄漏 / L 形 seedPos
+- [x] 63 个 Plantable 分类 / TFC 灌木/果树 vs 种植盆生长机制分析
 
 ---
 
@@ -66,6 +51,4 @@
 - [ ] 爆炸/塌方拆墙时触发重检
 - [ ] 大型空间性能测试
 - [ ] Plantable 加温度检查 — 温室温度不够时暂停生长（不死）
-
-### 打磨
-- [ ] 诊断 log 降级或移除（DEBUG → TRACE）
+- [ ] 水箱单独存水（现在是泵集中存储，容量由上方水箱数决定）

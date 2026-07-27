@@ -11,6 +11,7 @@ import com.yukimods.firmalifehardcore.event.ReinforcedDirtHandler;
 import com.yukimods.firmalifehardcore.item.ModItems;
 import com.yukimods.firmalifehardcore.util.CellarDebugInfo;
 import com.yukimods.firmalifehardcore.util.CellarTracker;
+import com.yukimods.firmalifehardcore.util.PumpTickManager;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
@@ -22,7 +23,12 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
+import com.eerussianguy.firmalife.common.blockentities.FLBlockEntities;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,10 +52,24 @@ public class FirmaLifeHardCore {
         ModItems.ITEMS.register(modEventBus);
         ModCreativeTab.CREATIVE_TABS.register(modEventBus);
 
+        // 注册 FluidHandler 能力给水泵站（管道连接需要）
+        modEventBus.addListener(RegisterCapabilitiesEvent.class, event -> {
+            event.registerBlockEntity(
+                Capabilities.FluidHandler.BLOCK,
+                FLBlockEntities.PUMPING_STATION.get(),
+                (be, side) -> (IFluidHandler) be
+            );
+        });
+
         // 注册事件处理器
         NeoForge.EVENT_BUS.register(CellarEventHandler.class);
         NeoForge.EVENT_BUS.register(ReinforcedDirtHandler.class);
         NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, this::onRegisterCommands);
+        NeoForge.EVENT_BUS.addListener(LevelTickEvent.Post.class, event -> {
+            if (event.getLevel() instanceof ServerLevel) {
+                PumpTickManager.tickAll();
+            }
+        });
 
         LOGGER.info("FirmaLife HardCore initialized");
     }
