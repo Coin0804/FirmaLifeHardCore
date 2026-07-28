@@ -1,3 +1,18 @@
+## 0.2.1-beta
+
+### Fixes
+- Sprinkler BFS refactored: terminal check (pump/tank) now runs before pipe traversal, so tanks stacked on pumps are correctly found.
+- Tank count resolved from pump's own fluid capacity instead of duplicate scanning — single source of truth.
+- BFS inner class moved out of mixin package to fix `IllegalClassLoadError`.
+
+### Changes
+- `searchForFluid` fully rewritten via `@Overwrite` — cleaner structure, no scattered `@Redirect` patches on `enqueueConnections`.
+- Pump connection check extracted as `@Unique` helper — no longer redirects `PumpingStationBlock.hasConnection` from the sprinkler mixin.
+
+---
+
+## 0.2.0-beta
+
 ### Additions
 - Pumping Station is now a NeoForge fluid container (IFluidHandler) with base 500mB storage.
 - Each Irrigation Tank stacked directly above the pump adds 500mB capacity (max 3).
