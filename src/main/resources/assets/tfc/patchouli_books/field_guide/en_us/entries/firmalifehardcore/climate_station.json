@@ -15,7 +15,7 @@
     {
       "type": "patchouli:text",
       "title": "Debug Commands",
-      "text": "$(thing)/firmalifehardcore cellar info$()$(br)View cellar/greenhouse detection details at your current position.$(br2)$(thing)/firmalifehardcore cellar list$()$(br)List all tracked spaces in the current dimension.$(br2)$(thing)/firmalifehardcore cellar recalc$()$(br)Force a rescan at your position (requires permission level 4)."
+      "text": "$(thing)/flhc cellar info$()$(br)View cellar/greenhouse detection details at your current position.$(br2)$(thing)/flhc cellar list$()$(br)List all tracked spaces in the current dimension.$(br2)$(thing)/flhc cellar recalc$()$(br)Force a rescan at your position (requires permission level 4).$(br2)$(thing)/flhc cellar clear$()$(br)Clear all tracked space caches (requires permission level 4)."
     }
   ],
   "read_by_default": true,

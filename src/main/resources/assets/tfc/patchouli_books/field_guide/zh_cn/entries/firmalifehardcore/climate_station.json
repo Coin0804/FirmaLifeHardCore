@@ -15,7 +15,7 @@
     {
       "type": "patchouli:text",
       "title": "调试命令",
-      "text": "$(thing)/firmalifehardcore cellar info$()$(br)查看当前位置的地窖/温室检测详情。$(br2)$(thing)/firmalifehardcore cellar list$()$(br)列出当前维度所有已追踪的空间。$(br2)$(thing)/firmalifehardcore cellar recalc$()$(br)强制重新扫描当前位置（需要 4 级权限）。"
+      "text": "$(thing)/flhc cellar info$()$(br)查看当前位置的地窖/温室检测详情。$(br2)$(thing)/flhc cellar list$()$(br)列出当前维度所有已追踪的空间。$(br2)$(thing)/flhc cellar recalc$()$(br)强制重新扫描当前位置（需要 4 级权限）。$(br2)$(thing)/flhc cellar clear$()$(br)清空所有已追踪空间缓存（需要 4 级权限）。"
     },
     {
       "type": "patchouli:text",

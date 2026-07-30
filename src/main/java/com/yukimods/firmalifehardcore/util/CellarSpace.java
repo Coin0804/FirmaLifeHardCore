@@ -20,8 +20,11 @@ public class CellarSpace {
     /** 墙体方块位置 */
     public final Set<BlockPos> wallPositions = new HashSet<>();
 
-    /** 内部障碍物位置（食物架、箱子等——需要通知 ClimateReceiver 但不计入墙体） */
+    /** 内部障碍物位置（岩石、泥土等纯障碍物——不含 ClimateReceiver） */
     public final Set<BlockPos> obstaclePositions = new HashSet<>();
+
+    /** ClimateReceiver 位置（食品架、风干架、大缸、洒水头、种植盆、奶酪轮等需要通知的方块） */
+    public final Set<BlockPos> receiverPositions = new HashSet<>();
 
     /** 种子位置（用于重检测的 floodfill 起点） */
     public BlockPos seedPos;
@@ -91,5 +94,6 @@ public class CellarSpace {
         this.interiorPositions.clear();
         this.wallPositions.clear();
         this.obstaclePositions.clear();
+        this.receiverPositions.clear();
     }
 }

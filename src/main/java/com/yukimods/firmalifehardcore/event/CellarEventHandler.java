@@ -57,14 +57,14 @@ public class CellarEventHandler {
     public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         BlockState state = event.getPlacedBlock();
         if (isIrrigationTank(state)) PumpTickManager.notifyBlockChanged(event.getLevel(), event.getPos());
-        if (isRelevantBlock(state)) trigger(event.getLevel(), event.getPos(), state, "PLACE");
+        if (affectsCellar(state)) trigger(event.getLevel(), event.getPos(), state, "PLACE");
     }
 
     @SubscribeEvent
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
         BlockState oldState = event.getState();
         if (isIrrigationTank(oldState)) PumpTickManager.notifyBlockChanged(event.getLevel(), event.getPos());
-        if (!isRelevantBlock(oldState)) return;
+        if (!affectsCellar(oldState)) return;
         if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
 
         CellarTracker tracker = CellarAttachment.get(serverLevel);
@@ -75,11 +75,10 @@ public class CellarEventHandler {
         return state.getBlock() == FLBlocks.IRRIGATION_TANK.get();
     }
 
-    private static boolean isRelevantBlock(BlockState state) {
+    private static boolean affectsCellar(BlockState state) {
         return ThermalConductivity.isRelevant(state)
             || ThermalConductivity.isDoor(state)
-            || state.is(ThermalConductivity.TAG_CONTAINERS)
-            || state.is(ThermalConductivity.TAG_PLANTERS);
+            || state.is(ThermalConductivity.TAG_CLIMATE_RECEIVERS);
     }
 
     private static void trigger(LevelAccessor lv, BlockPos pos, BlockState state, String action) {

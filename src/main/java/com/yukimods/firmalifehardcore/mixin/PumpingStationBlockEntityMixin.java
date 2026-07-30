@@ -2,7 +2,6 @@ package com.yukimods.firmalifehardcore.mixin;
 
 import com.eerussianguy.firmalife.common.blockentities.PumpingStationBlockEntity;
 import com.eerussianguy.firmalife.common.blocks.FLBlocks;
-import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import com.yukimods.firmalifehardcore.util.PumpTickManager;
 import net.minecraft.core.BlockPos;
@@ -160,16 +159,12 @@ public abstract class PumpingStationBlockEntityMixin implements IFluidHandler {
         CompoundTag tankTag = new CompoundTag();
         firmalifehardcore$tank.writeToNBT(access, tankTag);
         tag.put("firmalifehardcore:tank", tankTag);
-        FirmaLifeHardCore.LOGGER.debug("[PumpNBT] save water={} cap={}",
-            firmalifehardcore$tank.getFluidAmount(), firmalifehardcore$tank.getCapacity());
     }
 
     /** Mixin 覆盖 BlockEntity.loadAdditional——父类无实现，不会丢数据 */
     public void loadAdditional(CompoundTag tag, HolderLookup.Provider access) {
         if (tag.contains("firmalifehardcore:tank")) {
             firmalifehardcore$tank.readFromNBT(access, tag.getCompound("firmalifehardcore:tank"));
-            FirmaLifeHardCore.LOGGER.debug("[PumpNBT] load water={} cap={}",
-                firmalifehardcore$tank.getFluidAmount(), firmalifehardcore$tank.getCapacity());
         }
     }
 }

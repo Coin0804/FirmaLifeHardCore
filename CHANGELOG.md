@@ -1,3 +1,31 @@
+## 0.3.0-beta
+
+### Additions
+- **4-set BFS model**: OBSTACLE split into pure obstacle + RECEIVER — containers, planters, sprinklers, and cheese wheels are now properly distinguished from inert blocks.
+- Unified `#firmalifehardcore:climate_receivers` tag covering all ClimateReceiver blocks.
+- BFS cell expansion logic extracted to shared `updateBounds()` helper.
+- `/flhc cellar clear` debug command — clears all tracked spaces (permission 4).
+- `CellarDetector.DetectResult` — distinguishes "BFS genuinely failed" from "interrupted by unloaded chunk".
+- `receiverPositions` persisted in save data with full backward compatibility.
+
+### Changes
+- Command alias shortened: `/firmalifehardcore` → `/flhc`.
+- `broadcastToContainers` and `invalidateSpace` now only iterate `receiverPositions` instead of all interior/obstacle positions.
+- `CellarEventHandler.isRelevantBlock` → `affectsCellar` — clearer naming.
+- Health check now destroys spaces with zero receivers (fragment cleanup).
+- BFS aborts gracefully when encountering unloaded chunks, preserving existing space data.
+- Pending discovery candidates expanded: any non-WALL block is a valid BFS seed.
+- Load errors skip individual spaces instead of crashing.
+
+### Fixes
+- **Fragment cleanup**: 1-block cavities and receiver-less spaces are now auto-destroyed by the health check.
+- **Seed candidate blind spot**: BFS can now start from obstacle/receiver blocks, not just air.
+- **Orphaned containers**: When a cellar is split by a new wall, containers on the isolated side are immediately invalidated.
+- **Chunk boundary resilience**: Spaces spanning chunk borders no longer get destroyed by incomplete BFS data.
+- **PumpNBT log spam removed.**
+
+---
+
 ## 0.2.1-beta
 
 ### Fixes

@@ -2,6 +2,7 @@ package com.yukimods.firmalifehardcore.util;
 
 import com.eerussianguy.firmalife.common.blockentities.ClimateReceiver;
 import com.eerussianguy.firmalife.common.blockentities.ClimateType;
+import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -76,10 +77,24 @@ public class CellarTracker {
             spaceIt.remove();
             spacesProcessed++;
 
-            CellarSpace newSpace = CellarDetector.detectFromSeed(level, oldSpace.seedPos);
-            if (newSpace != null && newSpace.valid) {
+            // 种子未加载 → 信息不完整，保持旧空间不变
+            if (!level.isLoaded(oldSpace.seedPos)) continue;
+
+            CellarDetector.DetectResult result = CellarDetector.detectFromSeed(level, oldSpace.seedPos);
+            if (result.interrupted) {
+                // BFS 被未加载 chunk 中断 —— 信息不完整，保持旧空间
+                continue;
+            }
+            CellarSpace newSpace = result.space;
+            if (newSpace != null && newSpace.valid && !newSpace.receiverPositions.isEmpty()) {
                 replaceSpace(level, oldSpace, newSpace);
+            } else if (newSpace != null && newSpace.valid) {
+                // BFS 成功但无 receiver → 碎片，销毁
+                FirmaLifeHardCore.LOGGER.info("[CellarTracker] Destroying fragment at {} interior={}",
+                    oldSpace.seedPos.toShortString(), newSpace.interiorPositions.size());
+                invalidateSpace(level, oldSpace);
             } else {
+                // newSpace == null —— BFS 真正失败，销毁
                 invalidateSpace(level, oldSpace);
             }
         }
@@ -94,6 +109,8 @@ public class CellarTracker {
             List<CellarSpace> results = CellarDetector.detectAll(level, pos);
             for (CellarSpace ns : results) {
                 insertSpace(ns);
+                FirmaLifeHardCore.LOGGER.info("[CellarTracker] Discovered new space at {} interior={} receivers={}",
+                    ns.seedPos.toShortString(), ns.interiorPositions.size(), ns.receiverPositions.size());
                 broadcastToContainers(level, ns);
             }
         }
@@ -118,19 +135,29 @@ public class CellarTracker {
      * 方块变更时调用。仅在变更影响区域存在容器时才将对应位置加入待检队列。
      */
     public void markDirty(BlockPos changedPos) {
-        int maxHorizSpan = FirmaLifeHardCoreConfig.SERVER.maxHorizontalSpan.get();
-        int nearCount = 0;
+        // int maxHorizSpan = FirmaLifeHardCoreConfig.SERVER.maxHorizontalSpan.get();
+        // int nearCount = 0;
         // 标记相关 CellarSpace 重检
         for (CellarSpace space : allSpaces) {
             if (isNearSpace(space, changedPos)) {
                 dirtySpaces.add(space);
-                nearCount++;
+                // nearCount++;
             }
         }
 
         // 标记变更位置本身（作为潜在新空间种子）
         pendingDiscoveries.add(changedPos.immutable());
 
+    }
+
+    /** 清空所有已追踪空间（调试指令用） */
+    public void clearAll(ServerLevel level) {
+        for (CellarSpace space : new ArrayList<>(allSpaces)) {
+            invalidateSpace(level, space);
+        }
+        dirtySpaces.clear();
+        pendingDiscoveries.clear();
+        delayedBreaks.clear();
     }
 
     /** 强制重算（调试指令用） */
@@ -160,8 +187,12 @@ public class CellarTracker {
     public CellarSpace query(BlockPos pos) {
         CellarSpace space = spacesByPos.get(pos);
         if (space == null) {
-            for (CellarSpace s : allSpaces)
-                if (s.valid && s.obstaclePositions.contains(pos)) { space = s; break; }
+            for (CellarSpace s : allSpaces) {
+                if (s.valid && (s.obstaclePositions.contains(pos) || s.receiverPositions.contains(pos))) {
+                    space = s;
+                    break;
+                }
+            }
         }
         if (space != null && space.valid) {
             return space;
@@ -246,6 +277,13 @@ public class CellarTracker {
 
     /** 替换一个已有空间（重新 floodfill 后） */
     private void replaceSpace(ServerLevel level, CellarSpace oldSpace, CellarSpace newSpace) {
+        // 通知旧空间中不在新空间内的容器失效（如隔墙后的隔离侧容器）
+        for (BlockPos rp : oldSpace.receiverPositions) {
+            if (!newSpace.receiverPositions.contains(rp)) {
+                updateContainerAt(level, rp, false, 0, ClimateType.CELLAR);
+                updateContainerAt(level, rp, false, 0, ClimateType.GREENHOUSE);
+            }
+        }
         for (BlockPos ip : oldSpace.interiorPositions) spacesByPos.remove(ip);
         allSpaces.remove(oldSpace);
         // 合并：新空间可能吞并了其他空间（如拆墙后两室合一），移除重叠的旧空间
@@ -282,13 +320,10 @@ public class CellarTracker {
     private void invalidateSpace(ServerLevel level, CellarSpace space) {
         for (BlockPos ip : space.interiorPositions) spacesByPos.remove(ip);
         allSpaces.remove(space);
-        for (BlockPos ip : space.interiorPositions){
-            updateContainerAt(level, ip, false, 0, ClimateType.CELLAR);
-            updateContainerAt(level, ip, false, 0, ClimateType.GREENHOUSE);
-        }
-        for (BlockPos op : space.obstaclePositions){
-            updateContainerAt(level, op, false, 0, ClimateType.CELLAR);
-            updateContainerAt(level, op, false, 0, ClimateType.GREENHOUSE);
+        for (BlockPos rp : space.receiverPositions) {
+            if (!level.isLoaded(rp)) continue;  // chunk 未加载，跳过
+            updateContainerAt(level, rp, false, 0, ClimateType.CELLAR);
+            updateContainerAt(level, rp, false, 0, ClimateType.GREENHOUSE);
         }
         space.invalidate();
     }
@@ -301,18 +336,14 @@ public class CellarTracker {
         }
     }
 
-    /** 广播给空间内所有 ClimateReceiver（含内部障碍物位置中的容器） */
+    /** 广播给空间内所有 ClimateReceiver */
     private void broadcastToContainers(ServerLevel level, CellarSpace space) {
         int tier = CellarInventoryHelper.tierFromTemperature(space.getEffectiveTemperature(level));
         boolean effective = space.valid && tier > 0; // tier=0 视为无效地窖
-        // 地窖总是通知，温室额外通知一次，温室使用最高等级
-        for (BlockPos ip : space.interiorPositions){
-            updateContainerAt(level, ip, effective, tier, ClimateType.CELLAR);
-            updateContainerAt(level, ip, space.isGreenhouse(), Integer.MAX_VALUE, ClimateType.GREENHOUSE);
-        }
-        for (BlockPos op : space.obstaclePositions){
-            updateContainerAt(level, op, effective, tier, ClimateType.CELLAR);
-            updateContainerAt(level, op, space.isGreenhouse(), Integer.MAX_VALUE, ClimateType.GREENHOUSE);
+        for (BlockPos rp : space.receiverPositions) {
+            if (!level.isLoaded(rp)) continue;  // chunk 未加载，跳过
+            updateContainerAt(level, rp, effective, tier, ClimateType.CELLAR);
+            updateContainerAt(level, rp, space.isGreenhouse(), Integer.MAX_VALUE, ClimateType.GREENHOUSE);
         }
     }
 
@@ -373,6 +404,7 @@ public class CellarTracker {
             st.put("interior", posSetToTag(space.interiorPositions));
             st.put("walls", posSetToTag(space.wallPositions));
             st.put("obstacles", posSetToTag(space.obstaclePositions));
+            st.put("receivers", posSetToTag(space.receiverPositions));
             list.add(st);
         }
         tag.put(DATA_KEY, list);
@@ -381,19 +413,23 @@ public class CellarTracker {
     public void load(ServerLevel level, CompoundTag tag) {
         ListTag list = tag.getList(DATA_KEY, Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
-            CompoundTag st = list.getCompound(i);
-            BlockPos seed = BlockPos.of(st.getLong("seed"));
-            CellarSpace space = new CellarSpace(seed);
-            space.avgResistance = st.getFloat("avgR");
-            space.canopyRatio = st.getFloat("canopyRatio");
-            space.lastCheckedTick = st.getLong("lastTick");
-            tagToPosSet(st.getList("interior", Tag.TAG_LONG), space.interiorPositions);
-            tagToPosSet(st.getList("walls", Tag.TAG_LONG), space.wallPositions);
-            tagToPosSet(st.getList("obstacles", Tag.TAG_LONG), space.obstaclePositions);
-            // 重新计算温度和有效性
-            CellarDetector.calculateThermal(level, space);
-            space.valid = true;
-            insertSpace(space);
+            try {
+                CompoundTag st = list.getCompound(i);
+                BlockPos seed = BlockPos.of(st.getLong("seed"));
+                CellarSpace space = new CellarSpace(seed);
+                space.avgResistance = st.getFloat("avgR");
+                space.canopyRatio = st.getFloat("canopyRatio");
+                space.lastCheckedTick = st.getLong("lastTick");
+                tagToPosSet(st.getList("interior", Tag.TAG_LONG), space.interiorPositions);
+                tagToPosSet(st.getList("walls", Tag.TAG_LONG), space.wallPositions);
+                tagToPosSet(st.getList("obstacles", Tag.TAG_LONG), space.obstaclePositions);
+                tagToPosSet(st.getList("receivers", Tag.TAG_LONG), space.receiverPositions);
+                CellarDetector.calculateThermal(level, space);
+                space.valid = true;
+                insertSpace(space);
+            } catch (Exception e) {
+                FirmaLifeHardCore.LOGGER.warn("[CellarTracker] Failed to load space #{}: {}", i, e.toString());
+            }
         }
     }
 

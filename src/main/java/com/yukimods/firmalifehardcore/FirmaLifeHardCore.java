@@ -74,11 +74,11 @@ public class FirmaLifeHardCore {
         LOGGER.info("FirmaLife HardCore initialized");
     }
 
-    // ===== /firmalifehardcore cellar info|recalc|list =====
+    // ===== /flhc cellar info|recalc|list|clear =====
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
         event.getDispatcher().register(
-            Commands.literal("firmalifehardcore")
+            Commands.literal("flhc")
                 .requires(src -> src.hasPermission(2))
                 .then(Commands.literal("cellar")
                     .then(Commands.literal("info")
@@ -88,9 +88,12 @@ public class FirmaLifeHardCore {
                         .executes(this::cmdCellarRecalc))
                     .then(Commands.literal("list")
                         .executes(this::cmdCellarList))
+                    .then(Commands.literal("clear")
+                        .requires(src -> src.hasPermission(4))
+                        .executes(this::cmdCellarClear))
                 )
         );
-        LOGGER.info("[Server] Registered /firmalifehardcore cellar info|recalc|list");
+        LOGGER.info("[Server] Registered /flhc cellar info|recalc|list|clear");
     }
 
     private int cmdCellarInfo(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -123,6 +126,17 @@ public class FirmaLifeHardCore {
         CellarTracker tracker = CellarAttachment.get(level);
         String list = tracker.listAll();
         ctx.getSource().sendSuccess(() -> Component.literal(list), false);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int cmdCellarClear(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        ServerLevel level = (ServerLevel) player.level();
+
+        CellarTracker tracker = CellarAttachment.get(level);
+        tracker.clearAll(level);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+            "已清空所有地窖缓存，下次方块变更将重新检测"), true);
         return Command.SINGLE_SUCCESS;
     }
 }

@@ -72,9 +72,10 @@ The Firmalife irrigation system (Pumping Station, Irrigation Tank, Sprinklers) h
 ### Commands
 
 ```
-/firmalifehardcore cellar info     — Cellar/greenhouse debug info
-/firmalifehardcore cellar recalc   — Force rescan (permission 4)
-/firmalifehardcore cellar list     — List all tracked spaces
+/flhc cellar info     — Cellar/greenhouse debug info
+/flhc cellar recalc   — Force rescan (permission 4)
+/flhc cellar list     — List all tracked spaces
+/flhc cellar clear    — Clear all tracked spaces (permission 4)
 ```
 
 ### Patchouli
@@ -89,7 +90,7 @@ Registers a separate **FirmaLife HardCore** category in TFC's field guide (sortn
 
 ```bash
 ./gradlew build
-# JAR → build/libs/firmalifehardcore-neoforge-0.1.0-beta.jar
+# JAR → build/libs/firmalifehardcore-neoforge-0.3.0-beta.jar
 ```
 
 ### License
@@ -162,9 +163,10 @@ MIT
 ### 指令
 
 ```
-/firmalifehardcore cellar info     — 地窖/温室诊断信息
-/firmalifehardcore cellar recalc   — 强制重算（4 级权限）
-/firmalifehardcore cellar list     — 列出所有已追踪空间
+/flhc cellar info     — 地窖/温室诊断信息
+/flhc cellar recalc   — 强制重算（4 级权限）
+/flhc cellar list     — 列出所有已追踪空间
+/flhc cellar clear    — 清空所有已追踪空间（4 级权限）
 ```
 
 ### 帕秋莉
@@ -179,7 +181,7 @@ MIT
 
 ```bash
 ./gradlew build
-# JAR → build/libs/firmalifehardcore-neoforge-0.1.0-beta.jar
+# JAR → build/libs/firmalifehardcore-neoforge-0.3.0-beta.jar
 ```
 
 ### 许可证
