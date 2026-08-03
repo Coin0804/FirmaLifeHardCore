@@ -1,3 +1,14 @@
+## 0.3.1-beta
+
+### Fixes
+- **Pump refill is now dimension-scoped**: `tickAll(Level)` only fills pumps in the ticking level. `LevelTickEvent.Post` fires for every loaded `ServerLevel`, so the same pump was refilled once per dimension every tick (4× intended rate with multiple loaded dimensions).
+- **Pump refill cycle 20 → 80 ticks** (matching sprinkler watering cadence): at the 15 rpm design balance point the injection amount is now `25.0 → 25 mB/80tick` with zero `(int)` loss, exactly matching 5 sprinklers' 25 mB/80tick consumption (previously 6.28 → 6, 4% short, so the balance point was unreachable).
+- **Sprinkler `searchForFluid` now honors the `drain` flag in pipe mode**: probe calls (`drain=false`, e.g. tfcfertigation's per-tick fertilizing cycle check) no longer drain water from the pump tank — only water-level and pressure checks run. Actual watering (`drain=true`) is unchanged. Previously every probe call executed a real `drain(sprinklerWaterUse, EXECUTE)`, draining the pump tank every tick per sprinkler.
+- **Reinforced dirt conversion no longer blocks beam placement**: `ReinforcedDirtHandler` only takes over `UseItemOnBlockEvent` when conversion is guaranteed to succeed — clicking a non-reinforceable block or holding too few beams now falls back to normal support beam placement.
+- Conversion decision moved before event cancellation so client and server sides agree on whether to take over; `setBlock` failure now breaks the conversion loop instead of silently continuing.
+
+---
+
 ## 0.3.0-beta
 
 ### Additions

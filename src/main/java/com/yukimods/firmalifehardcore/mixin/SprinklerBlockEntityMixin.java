@@ -69,7 +69,7 @@ public class SprinklerBlockEntityMixin {
      * @param level         世界
      * @param start         洒水头位置
      * @param pipeDirection 洒水头朝向管道方向（上方为 UP，地面为 DOWN）
-     * @param drain         是否实际消耗水源（简单模式用，BFS 模式在 checkPumpConnection 内部处理）
+     * @param drain         是否实际消耗水源（false 仅水位/压力检查，不扣水）
      * @return 找到的流体类型，或 {@code null}
      */
     @Overwrite
@@ -135,7 +135,7 @@ public class SprinklerBlockEntityMixin {
                     if (direction.getAxis().isHorizontal()
                         && firmalifehardcore$isPipeInDirection(prev.state(), direction)) {
 
-                        if (firmalifehardcore$checkPumpConnection(level, cursor)) {
+                        if (firmalifehardcore$checkPumpConnection(level, cursor, drain)) {
                             return stateAdj.getFluidState().getType();
                         }
                         // hasConnection 失败 → fall through，不 return
@@ -204,9 +204,13 @@ public class SprinklerBlockEntityMixin {
      * 从给定位置向下扫描找水泵，检查水位 + 压力 + 实际耗水。
      * <p>
      * 压力公式：{@code pumpY + tankCount + rpm - sprinklerY >= 0} 才允许供水。
+     * <p>
+     * drain=true 时实际扣水（洒水器浇水）；drain=false 时仅探测——水位与压力已通过
+     * 检查即视为连接有效，不执行任何 drain 操作，避免探测方（如 tfcfertigation 的
+     * 施肥周期探测）误耗水泵水。
      */
     @Unique
-    private static boolean firmalifehardcore$checkPumpConnection(LevelAccessor level, BlockPos pos) {
+    private static boolean firmalifehardcore$checkPumpConnection(LevelAccessor level, BlockPos pos, boolean drain) {
         final int use = FirmaLifeHardCoreConfig.SERVER.sprinklerWaterUse.get();
         final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         cursor.set(pos);
@@ -236,6 +240,11 @@ public class SprinklerBlockEntityMixin {
                 final int pressure = pumpY + tankCount + rpm - firmalifehardcore$sprinklerY;
                 if (pressure < 0) {
                     return false;
+                }
+
+                // 探测（drain=false）：水位与压力已通过检查即视为连接有效，不扣水
+                if (!drain) {
+                    return true;
                 }
 
                 final FluidStack drained = fh.drain(use, FluidAction.EXECUTE);

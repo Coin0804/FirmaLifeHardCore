@@ -4,6 +4,7 @@ import com.eerussianguy.firmalife.common.blockentities.PumpingStationBlockEntity
 import com.yukimods.firmalifehardcore.FirmaLifeHardCore;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 
 import java.lang.reflect.Method;
@@ -54,22 +55,24 @@ public final class PumpTickManager {
         }
     }
 
-    public static void tickAll() {
+    public static void tickAll(Level level) {
         if (INTERNAL_FILL == null) return;
         for (PumpingStationBlockEntity self : LOADED) {
+            // LevelTickEvent 对每个已加载维度触发，只注水本维度的泵（否则多维度重复注水）
+            if (self.getLevel() != level) continue;
             if (self.getLevel() == null || self.isRemoved() || !self.getLevel().isLoaded(self.getBlockPos())) continue;
             // 每 100 tick 保底重扫水箱（事件驱动为主，此为保证）
             if (INVALIDATE_CACHE != null && (self.getLevel().getGameTime() + self.getBlockPos().getZ()) % 100 == 0) {
                 try { INVALIDATE_CACHE.invoke(self); } catch (Exception ignored) { }
             }
             if (!self.isPumping()) continue;
-            // 每 20 tick 注水一次，按 Z 坐标错峰，和洒水器一样
-            if ((self.getLevel().getGameTime() + self.getBlockPos().getZ()) % 20 != 0) continue;
+            // 每 80 tick 注水一次，按 Z 坐标错峰——与洒水器浇水同周期，15 rpm 时与 5 洒水器扣水精确平衡
+            if ((self.getLevel().getGameTime() + self.getBlockPos().getZ()) % 80 != 0) continue;
             var rotation = self.getRotationNode().rotation();
             if (rotation == null) continue;
             float speed = rotation.positiveSpeed();
-            // 一次补 20 tick 的量，避免 (int) 截断
-            int amount = (int) (speed * FirmaLifeHardCoreConfig.SERVER.pumpRateFactor.get().floatValue() * 20.0f);
+            // 一次补 80 tick 的量，避免 (int) 截断
+            int amount = (int) (speed * FirmaLifeHardCoreConfig.SERVER.pumpRateFactor.get().floatValue() * 80.0f);
             if (amount <= 0) continue;
             try {
                 INTERNAL_FILL.invoke(self, amount);

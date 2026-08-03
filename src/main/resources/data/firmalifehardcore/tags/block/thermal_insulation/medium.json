@@ -10,6 +10,8 @@
     "#minecraft:planks",
     "#minecraft:logs",
     "tfc:wattle",
-    "tfc:thatch"
+    "tfc:thatch",
+    "#tfc:mud_bricks",
+    "#firmalifehardcore:reinforced_soils"
   ]
 }

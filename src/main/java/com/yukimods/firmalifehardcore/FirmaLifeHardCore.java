@@ -66,8 +66,8 @@ public class FirmaLifeHardCore {
         NeoForge.EVENT_BUS.register(ReinforcedDirtHandler.class);
         NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, this::onRegisterCommands);
         NeoForge.EVENT_BUS.addListener(LevelTickEvent.Post.class, event -> {
-            if (event.getLevel() instanceof ServerLevel) {
-                PumpTickManager.tickAll();
+            if (event.getLevel() instanceof ServerLevel serverLevel) {
+                PumpTickManager.tickAll(serverLevel);
             }
         });
 

@@ -14,9 +14,9 @@ Enclosed spaces are detected automatically when wall/container blocks are placed
 
 | Tier | Resistance | Typical Blocks |
 |------|-----------|----------------|
-| **HIGH** | 0.75 | Mud bricks, sealed bricks (`#firmalife:cellar_insulation`), reinforced soil |
-| **MEDIUM** | 0.55 | Stone, cobblestone, rock, dirt, grass, stone bricks, planks, logs, wattle |
-| **LOW** | 0.25 | Glass, glass panes, metal blocks, sandstone, support beams |
+| **HIGH** | 0.75 | Sealed bricks |
+| **MEDIUM** | 0.55 | Stones, ore blocks, dirt, grass, stone bricks, packed mud, planks, logs, wattle, thatch, mud bricks, reinforced soil |
+| **LOW** | 0.25 | Glass (blocks/panes), storage blocks (metal, coal, etc.), sandstone, irrigation tank |
 
 Doors count as medium resistance. **Double doors** grant a **4× multiplier**.
 
@@ -48,10 +48,12 @@ The Firmalife irrigation system (Pumping Station, Irrigation Tank, Sprinklers) h
 - Base 500mB storage, +500mB per Irrigation Tank stacked directly above (max 3)
 - Draws water from below the pump; fill rate proportional to mechanical rotation speed
 - Fluid capacity auto-synced via NeoForge capabilities; compatible with external fluid pipes
-- Per-tick fill staggered by Z-coordinate (every 20 ticks, ×20 multiplier to avoid truncation)
+- Per-tick fill staggered by Z-coordinate (every 80 ticks, ×80 multiplier to avoid truncation — matches the sprinkler cycle, so 15 RPM injects exactly 25mB/80tick with zero `(int)` loss)
+- Fill is dimension-scoped: each pump refills only when its own level ticks (no multi-dimension duplication)
 
 **Sprinklers** — Real water consumption:
-- Consume 5mB per spray cycle (~80 ticks). 15 RPM pump sustains ~5 sprinklers
+- Consume 5mB per spray cycle (~80 ticks); 5 sprinklers drain 25mB/80tick, exactly matched by a 15 RPM pump's 25mB/80tick injection — the design balance point
+- `searchForFluid` honors its `drain` flag: probe calls (`drain=false`, e.g. other mods' periodic checks) never consume pump water — only water-level and pressure are checked
 - **Pump Pressure** formula: `PumpY + Tanks + RPM − SprinklerY ≥ 0` — gravity + tank head + rotation determines reach
 - Tank count is event-driven (cached, invalidated on tank place/break); 100-tick fallback rescan
 
@@ -90,7 +92,7 @@ Registers a separate **FirmaLife HardCore** category in TFC's field guide (sortn
 
 ```bash
 ./gradlew build
-# JAR → build/libs/firmalifehardcore-neoforge-0.3.0-beta.jar
+# JAR → build/libs/firmalifehardcore-neoforge-0.3.1-beta.jar
 ```
 
 ### License
@@ -109,15 +111,15 @@ MIT
 
 | 等级 | 热阻 | 典型方块 |
 |------|------|----------|
-| **HIGH** | 0.75 | 泥砖、密封砖 (`#firmalife:cellar_insulation`)、带支撑土 |
-| **MEDIUM** | 0.55 | 石头、圆石、岩块、泥土、草地、石砖、木板、原木、wattle |
-| **LOW** | 0.25 | 玻璃、玻璃板、金属块、砂岩、支撑梁 |
+| **HIGH** | 0.75 | 密封砖 |
+| **MEDIUM** | 0.55 | 岩石或矿石、泥土类（耕地和草径不算）、各种砖、木头类|
+| **LOW** | 0.25 | 玻璃（块/板）、金属块煤块等、砂岩、灌溉水箱 |
 
 门算中等热阻，**双门 4 倍**加成。
 
-**地窖**：T_室内 = 基准 + (T_室外 − 基准) × (1 − 平均热阻)，基准 = 4°C。温度越低保鲜越好（≤16°C SHELVED / ≤8°C SHELVED_2 / ≤0°C SHELVED_3）。
+**地窖**：地窖基准温度 = 4 °C，室内温度 = 室外温度 - (室外温度-基准) × 平均热阻。温度越低保鲜越好（≤16°C SHELVED / ≤8°C SHELVED_2 / ≤0°C SHELVED_3）。
 
-**温室**：屋顶方块下方是室内空间（含障碍物）→ 计入屋顶。玻璃屋顶 ≥ 50% 可见天空 → 温室。基准 = 4 + 40 × 棚顶比例。
+**温室**：屋顶玻璃屋顶 ≥ 50% 可见天空 → 温室。温室基准 = 4 + 40 × 棚顶比例（°C）。
 
 **温度 API**：`getInstantTemperature()` 和 `getAverageTemperature()` 均被拦截。即时返回有效温度（随天气波动），年均返回室内基准温度（稳定微气候，供灌木/果树判气候适宜度）。
 
@@ -143,10 +145,12 @@ MIT
 - 基础 500mB 储水，正上方每堆叠一个灌溉水箱 +500mB（最多 3 个）
 - 从下方水源取水，储水速率与机械转速成正比
 - 通过 NeoForge 能力系统注册，兼容外部流体管道
-- 每 tick 填充按 Z 坐标错峰（每 20 tick 一次，×20 避免截断）
+- 每 tick 填充按 Z 坐标错峰（每 80 tick 一次，×80 避免截断——与洒水器同周期，15 RPM 时精确注入 25mB/80tick 零损失）
+- 注水按维度隔离：水泵只在自己的维度 tick 时注水（避免多维度重复注水）
 
 **洒水器** — 真实水消耗：
-- 每次喷水消耗 5mB（~80 tick），15 RPM 水泵可维持约 5 个洒水器
+- 每次喷水消耗 5mB（~80 tick），5 个洒水器每 80 tick 消耗 25mB，与 15 RPM 水泵注入量（25mB/80tick）精确平衡——设计平衡点
+- `searchForFluid` 尊重 drain 参数：探测调用（drain=false，如其他 mod 的周期检查）只检查水位与压力，绝不消耗水泵水
 - **泵压**公式：`水泵Y + 水箱数 + RPM − 洒水器Y ≥ 0`——重力+水箱+转速决定水能送到的高度
 - 水箱计数事件驱动（缓存，水箱放置/破坏时刷新；100 tick 保底重扫）
 
@@ -181,7 +185,7 @@ MIT
 
 ```bash
 ./gradlew build
-# JAR → build/libs/firmalifehardcore-neoforge-0.3.0-beta.jar
+# JAR → build/libs/firmalifehardcore-neoforge-0.3.1-beta.jar
 ```
 
 ### 许可证

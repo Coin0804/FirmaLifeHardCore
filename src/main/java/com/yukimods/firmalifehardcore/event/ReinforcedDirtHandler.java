@@ -4,6 +4,7 @@ import com.yukimods.firmalifehardcore.block.ModBlocks;
 import com.yukimods.firmalifehardcore.block.ReinforcedSoilBlock;
 import com.yukimods.firmalifehardcore.block.ReinforcedSoilType;
 import com.yukimods.firmalifehardcore.config.FirmaLifeHardCoreConfig;
+import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
@@ -55,26 +56,15 @@ public final class ReinforcedDirtHandler {
         ItemStack mainHand = event.getItemStack();
         ItemStack offHand = player.getOffhandItem();
 
-        // 主手梁 + 副手锤：接管梁的放置事件，改为转换泥土
+        // 主手梁 + 副手锤：尝试接管梁的放置事件，改为转换泥土
         if (!mainHand.is(SUPPORT_BEAMS) || !offHand.is(HAMMERS)) return;
 
+        // 点击的不是可加固方块 → 不接管，回退正常放置梁
         BlockState clickedState = level.getBlockState(clickedPos);
-        if (!clickedState.is(REINFORCEABLE)) {
-            event.setCanceled(true);
-            event.setCancellationResult(ItemInteractionResult.FAIL);
-            return;
-        }
+        if (!clickedState.is(REINFORCEABLE)) return;
 
-        event.setCanceled(true);
-        event.setCancellationResult(ItemInteractionResult.SUCCESS);
-        if (level.isClientSide()) return;
-
-        ServerLevel sl = (ServerLevel) level;
+        // 计算本次可转化的格数（世界状态与玩家输入在两侧同步，接管决定两侧一致）
         int maxDepth = FirmaLifeHardCoreConfig.SERVER.reinforcedSoilMaxDepth.get();
-        int durabilityCost = FirmaLifeHardCoreConfig.SERVER.hammerDurabilityCost.get();
-
-        ReinforcedSoilType soilType = ReinforcedSoilType.fromBlock(clickedState.getBlock());
-
         int targetDepth = 1;
         if (player.isShiftKeyDown()) {
             int consecutive = 0;
@@ -89,10 +79,20 @@ public final class ReinforcedDirtHandler {
             targetDepth = consecutive;
         }
 
+        // 主手梁数量不足 → 无法转化，回退正常放置梁
         int available = mainHand.getCount();
         if (targetDepth > available) targetDepth = available;
         if (targetDepth <= 0) return;
 
+        // 转化可成功 → 接管事件，阻止梁的正常放置
+        event.setCanceled(true);
+        event.setCancellationResult(ItemInteractionResult.SUCCESS);
+        if (level.isClientSide()) return;
+
+        ServerLevel sl = (ServerLevel) level;
+        int durabilityCost = FirmaLifeHardCoreConfig.SERVER.hammerDurabilityCost.get();
+
+        ReinforcedSoilType soilType = ReinforcedSoilType.fromBlock(clickedState.getBlock());
         ReinforcedSoilBlock targetBlock = ModBlocks.get(soilType).get();
         BlockState reinforcedState = targetBlock.defaultBlockState();
 
@@ -102,7 +102,7 @@ public final class ReinforcedDirtHandler {
 
         for (int i = 0; i < targetDepth; i++) {
             if (!level.getBlockState(place).is(REINFORCEABLE)) break;
-            level.setBlock(place, reinforcedState, 3);
+            if (!level.setBlock(place, reinforcedState, 3)) break;
             converted++;
             place.move(Direction.DOWN);
         }
@@ -110,7 +110,11 @@ public final class ReinforcedDirtHandler {
         if (converted > 0) {
             if (!player.isCreative()) {
                 mainHand.shrink(converted);
-                offHand.hurtAndBreak(durabilityCost * converted, sl, player, item -> {});
+                offHand.hurtAndBreak(durabilityCost * converted, sl, player, new Consumer<Item>() {
+                    @Override
+                    public void accept(Item item) {
+                    }
+                });
             }
             level.playSound(null, clickedPos, SoundEvents.WOOD_PLACE, SoundSource.BLOCKS, 1f, 0.8f);
         }
