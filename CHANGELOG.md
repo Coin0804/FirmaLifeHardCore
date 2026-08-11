@@ -1,3 +1,11 @@
+## 0.3.2-beta
+
+### Fixes
+- **Reinforced soil beams are now shovel-mineable**: the 8 beam variants were missing from `mineable/shovel`. Combined with `requiresCorrectToolForDrops()`, no tool ever counted as correct, so beams dropped nothing when mined. Now they drop the regular reinforced soil, as intended.
+- **Reinforced soils now count as TFC insulation**: added all 16 variants to `tfc:insulation` (append, `replace: false`). Charcoal forge and bloomery multiblocks accept them as valid insulation walls/bottom — consistent with their medium (0.55) thermal resistance in the cellar/greenhouse system, and with real rammed-earth insulation.
+
+---
+
 ## 0.3.1-beta
 
 ### Fixes
