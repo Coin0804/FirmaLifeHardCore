@@ -1,3 +1,10 @@
+## 0.3.3-beta
+
+### Fixes
+- **Cheese wheels can now actually age**: `LargePlanterBlockEntity.setValid` computes `shouldAge = valid && climate == ClimateType.CELLAR` in one pass, so the *last* broadcast wins. We broadcast both greenhouse and cellar, and cellar came first — the later greenhouse broadcast then recomputed `shouldAge` as `false` and stomped the valid cellar state, so wheels never started aging. Vanilla Firmalife only ever sends one climate type per receiver, so this never surfaced there (its planter `setValid` even branches on `if (climate == ClimateType.GREENHOUSE)` first — the bug was our broadcasting order, not the receiver). `broadcastToContainers` now sends greenhouse first, cellar last, so the final broadcast the wheel receives is the cellar one.
+
+---
+
 ## 0.3.2-beta
 
 ### Fixes

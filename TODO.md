@@ -1,5 +1,13 @@
 # TODO — FirmaLife HardCore
 
+## 已完成 (2026-08-26) — 奶酪轮熟成修复
+
+### 广播顺序
+- [x] 奶酪轮永远无法变成正在熟成 — 根因：奶酪轮 `LargePlanterBlockEntity.setValid` 是 `shouldAge = valid && climate == ClimateType.CELLAR` 单次计算，最后一次广播胜出；我们同时广播温室+地窖，地窖先到，后到的温室广播把 shouldAge 算成 false 覆盖掉。原版 Firmalife 只发一种气候所以无此问题（其种植盆 setValid 本身有 `if (climate == ClimateType.GREENHOUSE)` 类型分流，代码不统一导致）。
+- [x] 修复 — `broadcastToContainers` 广播顺序对调：温室先、地窖后，奶酪轮最终收到地窖广播，shouldAge=true 正确熟成（0.3.3-beta）
+
+---
+
 ## 已完成 (2026-08-03) — 灌溉系统 bug 修复
 
 ### 洒水器 drain 契约

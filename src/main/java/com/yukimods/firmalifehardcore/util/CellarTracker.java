@@ -342,8 +342,8 @@ public class CellarTracker {
         boolean effective = space.valid && tier > 0; // tier=0 视为无效地窖
         for (BlockPos rp : space.receiverPositions) {
             if (!level.isLoaded(rp)) continue;  // chunk 未加载，跳过
-            updateContainerAt(level, rp, effective, tier, ClimateType.CELLAR);
             updateContainerAt(level, rp, space.isGreenhouse(), Integer.MAX_VALUE, ClimateType.GREENHOUSE);
+            updateContainerAt(level, rp, effective, tier, ClimateType.CELLAR);
         }
     }
 
