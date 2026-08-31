@@ -24,7 +24,8 @@ public final class ThermalConductivity {
     public static final TagKey<Block> TAG_LOW    = create("thermal_insulation/low");
     public static final TagKey<Block> TAG_DOOR       = create("cellar_doors");
     public static final TagKey<Block> TAG_GREENHOUSE_ROOF = create("greenhouse_roof");
-    public static final TagKey<Block> TAG_CLIMATE_RECEIVERS = create("climate_receivers");
+    public static final TagKey<Block> TAG_CELLAR_RECEIVERS = create("cellar_receivers");
+    public static final TagKey<Block> TAG_GREENHOUSE_RECEIVERS = create("greenhouse_receivers");
     public static final TagKey<Block> TAG_CONTAINERS  = create("cellar_containers");
     public static final TagKey<Block> TAG_PLANTERS = TagKey.create(Registries.BLOCK,
         ResourceLocation.fromNamespaceAndPath("firmalife", "planters"));
@@ -79,6 +80,16 @@ public final class ThermalConductivity {
     /** 检查方块是否为温室棚顶（玻璃类透明方块，用于顶部透光） */
     public static boolean isGreenhouseRoof(BlockState state) {
         return state.is(TAG_GREENHOUSE_ROOF);
+    }
+
+    /** 检查方块是否为 ClimateReceiver（地窖或温室接收器） */
+    public static boolean isReceiver(BlockState state) {
+        return state.is(TAG_CELLAR_RECEIVERS) || state.is(TAG_GREENHOUSE_RECEIVERS);
+    }
+
+    /** 检查方块是否为温室接收器（setValid 认 GREENHOUSE 广播的种植盆/洒水器） */
+    public static boolean isGreenhouseReceiver(BlockState state) {
+        return state.is(TAG_GREENHOUSE_RECEIVERS);
     }
 
     private static Direction getDoorFacing(BlockState state) {

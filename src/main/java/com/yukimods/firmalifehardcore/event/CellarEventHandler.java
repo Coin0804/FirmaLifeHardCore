@@ -78,7 +78,7 @@ public class CellarEventHandler {
     private static boolean affectsCellar(BlockState state) {
         return ThermalConductivity.isRelevant(state)
             || ThermalConductivity.isDoor(state)
-            || state.is(ThermalConductivity.TAG_CLIMATE_RECEIVERS);
+            || ThermalConductivity.isReceiver(state);
     }
 
     private static void trigger(LevelAccessor lv, BlockPos pos, BlockState state, String action) {

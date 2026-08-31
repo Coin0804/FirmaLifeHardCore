@@ -1,10 +1,15 @@
 # TODO — FirmaLife HardCore
 
-## 已完成 (2026-08-26) — 奶酪轮熟成修复
+## 已完成 (2026-08-29) — 奶酪轮熟成修复 + 接收器分类广播
 
-### 广播顺序
-- [x] 奶酪轮永远无法变成正在熟成 — 根因：奶酪轮 `LargePlanterBlockEntity.setValid` 是 `shouldAge = valid && climate == ClimateType.CELLAR` 单次计算，最后一次广播胜出；我们同时广播温室+地窖，地窖先到，后到的温室广播把 shouldAge 算成 false 覆盖掉。原版 Firmalife 只发一种气候所以无此问题（其种植盆 setValid 本身有 `if (climate == ClimateType.GREENHOUSE)` 类型分流，代码不统一导致）。
-- [x] 修复 — `broadcastToContainers` 广播顺序对调：温室先、地窖后，奶酪轮最终收到地窖广播，shouldAge=true 正确熟成（0.3.3-beta）
+### 根因
+- [x] 奶酪轮永远无法变成正在熟成 — 奶酪轮 `CheeseWheelBlock.setValid` 是 `shouldAge = valid && climate == ClimateType.CELLAR` 单次计算；洒水器 `SprinklerBlockEntity.setValid` 完全无视 climate 直接同步 valid。两者都假设 receiver 只收到一种气候（原版如此），我们却向所有 receiver 同时广播温室+地窖，最后一次调用胜出 → 奶酪轮被温室广播算成 false、洒水器被地窖广播误设为 valid。原版种植盆 setValid 有 `if (climate == ClimateType.GREENHOUSE)` 分流，代码不统一导致。
+
+### 修复 — 标签分类广播（最终方案）
+- [x] 删 `climate_receivers` 统一标签，拆为 `cellar_receivers`（食品架/挂架/大缸/奶酪轮 7 种）与 `greenhouse_receivers`（种植盆/洒水器 2 种）
+- [x] `CellarDetector` 扫描时按标签把 receiver 分入 `cellarReceiverPositions` / `greenhouseReceiverPositions`（温室优先判定）
+- [x] `broadcastToContainers` 各发各的：地窖广播只发地窖接收器、温室广播只发温室接收器 — 奶酪轮只收到 CELLAR、种植盆/洒水器只收到 GREENHOUSE
+- [x] save/load 拆两个键；旧存档 `receivers` 兼容归地窖，重检后按标签重新分类（0.3.4-beta）
 
 ---
 

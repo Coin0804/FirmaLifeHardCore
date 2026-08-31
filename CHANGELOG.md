@@ -1,3 +1,10 @@
+## 0.3.4-beta
+
+### Fixes
+- **Cheese wheels can now actually age — receivers are split by climate type**: `CheeseWheelBlock.setValid` computes `shouldAge = valid && climate == ClimateType.CELLAR` in one pass, and `SprinklerBlockEntity.setValid` ignores `climate` entirely and just syncs `valid`. Both assume the receiver only ever receives *one* climate type — true for vanilla Firmalife, broken for us, because we broadcast both cellar and greenhouse to every receiver and the last call won. The unified `climate_receivers` tag is replaced by two tags: `cellar_receivers` (food shelves, hangers, large vessels, cheese wheels) and `greenhouse_receivers` (planters, sprinklers). `CellarDetector` sorts every receiver position into the matching set at scan time (greenhouse wins if both), and `broadcastToContainers` sends each climate only to its own receivers — cheese wheels only ever see `CELLAR`, sprinklers/planters only ever see `GREENHOUSE`. Old saves load the legacy `receivers` list as cellar receivers; the next re-scan reclassifies by tag.
+
+---
+
 ## 0.3.3-beta
 
 ### Fixes

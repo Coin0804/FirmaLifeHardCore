@@ -19,8 +19,15 @@ public final class CellarDetector {
     private static Type classify(BlockState state) {
         if (state.isAir() || state.canBeReplaced()) return Type.TRANSPARENT;
         if (ThermalConductivity.isRelevant(state) || ThermalConductivity.isDoor(state)) return Type.WALL;
-        if (state.is(ThermalConductivity.TAG_CLIMATE_RECEIVERS)) return Type.RECEIVER;
+        if (ThermalConductivity.isReceiver(state)) return Type.RECEIVER;
         return Type.OBSTACLE;
+    }
+
+    /** 按接收器标签把位置放入对应的分类集合（温室优先，否则归地窖） */
+    private static void addReceiver(CellarSpace space, BlockState state, BlockPos pos) {
+        Set<BlockPos> target = ThermalConductivity.isGreenhouseReceiver(state)
+            ? space.greenhouseReceiverPositions : space.cellarReceiverPositions;
+        target.add(pos);
     }
 
     /**
@@ -95,9 +102,10 @@ public final class CellarDetector {
         visited.add(seedPos);
         queue.add(seedPos);
         // 种子位置按实际类型归类（RECEIVER 可作种子时不能硬编码为 interior）
-        switch (classify(level.getBlockState(seedPos))) {
+        BlockState seedState = level.getBlockState(seedPos);
+        switch (classify(seedState)) {
             case OBSTACLE -> space.obstaclePositions.add(seedPos.immutable());
-            case RECEIVER -> space.receiverPositions.add(seedPos.immutable());
+            case RECEIVER -> addReceiver(space, seedState, seedPos.immutable());
             default -> space.interiorPositions.add(seedPos.immutable());
         }
 
@@ -123,7 +131,8 @@ public final class CellarDetector {
                 Set<BlockPos> targetSet = switch (t) {
                     case TRANSPARENT -> space.interiorPositions;
                     case OBSTACLE -> space.obstaclePositions;
-                    case RECEIVER -> space.receiverPositions;
+                    case RECEIVER -> ThermalConductivity.isGreenhouseReceiver(level.getBlockState(pos))
+                        ? space.greenhouseReceiverPositions : space.cellarReceiverPositions;
                     default -> throw new IllegalStateException("Unexpected type: " + t);
                 };
                 visited.add(pos);

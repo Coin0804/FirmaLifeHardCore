@@ -86,7 +86,8 @@ public class CellarTracker {
                 continue;
             }
             CellarSpace newSpace = result.space;
-            if (newSpace != null && newSpace.valid && !newSpace.receiverPositions.isEmpty()) {
+            if (newSpace != null && newSpace.valid
+                && (!newSpace.cellarReceiverPositions.isEmpty() || !newSpace.greenhouseReceiverPositions.isEmpty())) {
                 replaceSpace(level, oldSpace, newSpace);
             } else if (newSpace != null && newSpace.valid) {
                 // BFS 成功但无 receiver → 碎片，销毁
@@ -109,8 +110,9 @@ public class CellarTracker {
             List<CellarSpace> results = CellarDetector.detectAll(level, pos);
             for (CellarSpace ns : results) {
                 insertSpace(ns);
-                FirmaLifeHardCore.LOGGER.info("[CellarTracker] Discovered new space at {} interior={} receivers={}",
-                    ns.seedPos.toShortString(), ns.interiorPositions.size(), ns.receiverPositions.size());
+                FirmaLifeHardCore.LOGGER.info("[CellarTracker] Discovered new space at {} interior={} cellarReceivers={} greenhouseReceivers={}",
+                    ns.seedPos.toShortString(), ns.interiorPositions.size(),
+                    ns.cellarReceiverPositions.size(), ns.greenhouseReceiverPositions.size());
                 broadcastToContainers(level, ns);
             }
         }
@@ -188,7 +190,9 @@ public class CellarTracker {
         CellarSpace space = spacesByPos.get(pos);
         if (space == null) {
             for (CellarSpace s : allSpaces) {
-                if (s.valid && (s.obstaclePositions.contains(pos) || s.receiverPositions.contains(pos))) {
+                if (s.valid && (s.obstaclePositions.contains(pos)
+                    || s.cellarReceiverPositions.contains(pos)
+                    || s.greenhouseReceiverPositions.contains(pos))) {
                     space = s;
                     break;
                 }
@@ -278,9 +282,13 @@ public class CellarTracker {
     /** 替换一个已有空间（重新 floodfill 后） */
     private void replaceSpace(ServerLevel level, CellarSpace oldSpace, CellarSpace newSpace) {
         // 通知旧空间中不在新空间内的容器失效（如隔墙后的隔离侧容器）
-        for (BlockPos rp : oldSpace.receiverPositions) {
-            if (!newSpace.receiverPositions.contains(rp)) {
+        for (BlockPos rp : oldSpace.cellarReceiverPositions) {
+            if (!newSpace.cellarReceiverPositions.contains(rp)) {
                 updateContainerAt(level, rp, false, 0, ClimateType.CELLAR);
+            }
+        }
+        for (BlockPos rp : oldSpace.greenhouseReceiverPositions) {
+            if (!newSpace.greenhouseReceiverPositions.contains(rp)) {
                 updateContainerAt(level, rp, false, 0, ClimateType.GREENHOUSE);
             }
         }
@@ -320,9 +328,12 @@ public class CellarTracker {
     private void invalidateSpace(ServerLevel level, CellarSpace space) {
         for (BlockPos ip : space.interiorPositions) spacesByPos.remove(ip);
         allSpaces.remove(space);
-        for (BlockPos rp : space.receiverPositions) {
+        for (BlockPos rp : space.cellarReceiverPositions) {
             if (!level.isLoaded(rp)) continue;  // chunk 未加载，跳过
             updateContainerAt(level, rp, false, 0, ClimateType.CELLAR);
+        }
+        for (BlockPos rp : space.greenhouseReceiverPositions) {
+            if (!level.isLoaded(rp)) continue;  // chunk 未加载，跳过
             updateContainerAt(level, rp, false, 0, ClimateType.GREENHOUSE);
         }
         space.invalidate();
@@ -336,14 +347,17 @@ public class CellarTracker {
         }
     }
 
-    /** 广播给空间内所有 ClimateReceiver */
+    /** 广播给空间内所有 ClimateReceiver — 按接收器类型分开发送，只发各自认的气候类型 */
     private void broadcastToContainers(ServerLevel level, CellarSpace space) {
         int tier = CellarInventoryHelper.tierFromTemperature(space.getEffectiveTemperature(level));
         boolean effective = space.valid && tier > 0; // tier=0 视为无效地窖
-        for (BlockPos rp : space.receiverPositions) {
+        for (BlockPos rp : space.cellarReceiverPositions) {
+            if (!level.isLoaded(rp)) continue;  // chunk 未加载，跳过
+            updateContainerAt(level, rp, effective, tier, ClimateType.CELLAR);
+        }
+        for (BlockPos rp : space.greenhouseReceiverPositions) {
             if (!level.isLoaded(rp)) continue;  // chunk 未加载，跳过
             updateContainerAt(level, rp, space.isGreenhouse(), Integer.MAX_VALUE, ClimateType.GREENHOUSE);
-            updateContainerAt(level, rp, effective, tier, ClimateType.CELLAR);
         }
     }
 
@@ -404,7 +418,8 @@ public class CellarTracker {
             st.put("interior", posSetToTag(space.interiorPositions));
             st.put("walls", posSetToTag(space.wallPositions));
             st.put("obstacles", posSetToTag(space.obstaclePositions));
-            st.put("receivers", posSetToTag(space.receiverPositions));
+            st.put("cellar_receivers", posSetToTag(space.cellarReceiverPositions));
+            st.put("greenhouse_receivers", posSetToTag(space.greenhouseReceiverPositions));
             list.add(st);
         }
         tag.put(DATA_KEY, list);
@@ -423,7 +438,12 @@ public class CellarTracker {
                 tagToPosSet(st.getList("interior", Tag.TAG_LONG), space.interiorPositions);
                 tagToPosSet(st.getList("walls", Tag.TAG_LONG), space.wallPositions);
                 tagToPosSet(st.getList("obstacles", Tag.TAG_LONG), space.obstaclePositions);
-                tagToPosSet(st.getList("receivers", Tag.TAG_LONG), space.receiverPositions);
+                tagToPosSet(st.getList("cellar_receivers", Tag.TAG_LONG), space.cellarReceiverPositions);
+                tagToPosSet(st.getList("greenhouse_receivers", Tag.TAG_LONG), space.greenhouseReceiverPositions);
+                // 旧版存档只有未分类 receivers — 一律归地窖，空间重检后按标签重新分类
+                if (st.contains("receivers")) {
+                    tagToPosSet(st.getList("receivers", Tag.TAG_LONG), space.cellarReceiverPositions);
+                }
                 CellarDetector.calculateThermal(level, space);
                 space.valid = true;
                 insertSpace(space);
